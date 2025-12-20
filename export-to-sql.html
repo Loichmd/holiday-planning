@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Export localStorage → SQL</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #212529;
+        }
+        p {
+            color: #868e96;
+            margin-bottom: 20px;
+        }
+        button {
+            width: 100%;
+            padding: 14px 20px;
+            border: none;
+            background: #228be6;
+            color: white;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        button:hover {
+            background: #1c7ed6;
+        }
+        #sqlOutput {
+            background: #212529;
+            color: #51cf66;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            display: none;
+        }
+        .info-box {
+            background: #e7f5ff;
+            border: 2px solid #339af0;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        .info-box h3 {
+            color: #1971c2;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .info-box ol {
+            color: #495057;
+            font-size: 13px;
+            margin-left: 20px;
+        }
+        .info-box li {
+            margin-bottom: 4px;
+        }
+        .copy-btn {
+            background: #51cf66;
+            margin-top: 10px;
+        }
+        .copy-btn:hover {
+            background: #37b24d;
+        }
+        .warning {
+            background: #fff3bf;
+            border: 2px solid #fab005;
+            color: #862e9c;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📤 Export localStorage → SQL</h1>
+        <p>Générez du SQL pour importer vos données dans Supabase</p>
+
+        <div class="warning">
+            ⚠️ <strong>Important :</strong> Vous devez d'abord vous connecter à votre application principale pour que localStorage soit rempli !
+        </div>
+
+        <div class="info-box">
+            <h3>📋 Instructions :</h3>
+            <ol>
+                <li>Cliquez sur "Générer SQL"</li>
+                <li>Copiez le SQL généré</li>
+                <li>Allez dans Supabase → SQL Editor</li>
+                <li>Collez et exécutez le SQL</li>
+                <li>Vos données seront importées !</li>
+            </ol>
+        </div>
+
+        <button onclick="generateSQL()">🚀 Générer le SQL</button>
+
+        <div id="sqlOutput"></div>
+    </div>
+
+    <script>
+        function escapeSQL(str) {
+            if (!str) return "''";
+            return "'" + String(str).replace(/'/g, "''") + "'";
+        }
+
+        function generateSQL() {
+            const output = document.getElementById('sqlOutput');
+            output.style.display = 'block';
+            output.innerHTML = '';
+
+            // Chercher les données localStorage
+            const keys = Object.keys(localStorage).filter(k => k.startsWith('planningVoyages_'));
+
+            if (keys.length === 0) {
+                output.innerHTML = `-- ❌ ERREUR: Aucune donnée localStorage trouvée
+--
+-- Assurez-vous d'avoir :
+-- 1. Ouvert votre application principale (index.html)
+-- 2. Créé des projets et activités en mode démo
+-- 3. Puis revenez sur cette page
+
+-- Debug info:
+-- localStorage keys found: ${Object.keys(localStorage).length}
+-- Keys: ${Object.keys(localStorage).join(', ')}`;
+                return;
+            }
+
+            const userId = keys[0].replace('planningVoyages_', '');
+            const data = JSON.parse(localStorage.getItem(keys[0]));
+
+            if (!data.projects || data.projects.length === 0) {
+                output.innerHTML = `-- ❌ ERREUR: Aucun projet trouvé dans localStorage
+--
+-- Données trouvées: ${JSON.stringify(data, null, 2)}`;
+                return;
+            }
+
+            let sql = `-- ============================================
+-- IMPORT DONNÉES - Holiday Planning
+-- ============================================
+-- Généré le ${new Date().toLocaleString()}
+-- User ID localStorage: ${userId}
+-- Projets: ${data.projects.length}
+-- Activités: ${data.activities.length}
+--
+-- ⚠️ IMPORTANT: Remplacez 'YOUR_USER_ID_HERE' par votre vrai user_id
+-- Trouvez votre user_id dans: Authentication > Users > copier l'ID
+
+-- ============================================
+-- PROJETS
+-- ============================================
+
+`;
+
+            // Générer INSERT pour chaque projet
+            data.projects.forEach((project, index) => {
+                const travelers = project.travelers ? `ARRAY[${project.travelers.map(t => escapeSQL(t)).join(', ')}]` : 'ARRAY[]::text[]';
+
+                sql += `-- Projet ${index + 1}: ${project.name}
+INSERT INTO projects (user_id, name, description, travelers)
+VALUES (
+    'YOUR_USER_ID_HERE',  -- ⚠️ REMPLACEZ PAR VOTRE USER_ID
+    ${escapeSQL(project.name)},
+    ${escapeSQL(project.description || '')},
+    ${travelers}
+)
+RETURNING id; -- Notez cet ID pour les activités ci-dessous
+
+`;
+            });
+
+            sql += `
+-- ============================================
+-- ACTIVITÉS
+-- ============================================
+-- ⚠️ Pour chaque activité, remplacez 'PROJECT_ID_X' par l'ID
+-- retourné lors de la création du projet correspondant
+
+`;
+
+            // Générer INSERT pour chaque activité
+            data.activities.forEach((activity, index) => {
+                const projectIndex = data.projects.findIndex(p => p.id === activity.projectId) + 1;
+                const travelers = activity.travelers ? `ARRAY[${activity.travelers.map(t => escapeSQL(t)).join(', ')}]` : 'ARRAY[]::text[]';
+                const attachments = activity.attachments && activity.attachments.length > 0
+                    ? `'${JSON.stringify(activity.attachments).replace(/'/g, "''")}'::jsonb`
+                    : 'NULL';
+
+                sql += `-- Activité ${index + 1}: ${activity.title} (Projet ${projectIndex})
+INSERT INTO activities (
+    project_id,
+    title,
+    date,
+    time,
+    duration,
+    category,
+    travelers,
+    location,
+    url,
+    notes,
+    attachments
+)
+VALUES (
+    'PROJECT_ID_${projectIndex}',  -- ⚠️ REMPLACEZ par l'ID du projet ${projectIndex}
+    ${escapeSQL(activity.title)},
+    ${escapeSQL(activity.date)},
+    ${activity.time ? escapeSQL(activity.time) : 'NULL'},
+    ${activity.duration || 'NULL'},
+    ${escapeSQL(activity.category)},
+    ${travelers},
+    ${escapeSQL(activity.location || '')},
+    ${escapeSQL(activity.url || '')},
+    ${escapeSQL(activity.notes || '')},
+    ${attachments}
+);
+
+`;
+            });
+
+            sql += `-- ============================================
+-- ✅ IMPORT TERMINÉ !
+-- ============================================
+--
+-- ÉTAPES FINALES:
+-- 1. Copiez tout ce SQL
+-- 2. Allez dans Supabase → SQL Editor → New query
+-- 3. Remplacez 'YOUR_USER_ID_HERE' par votre vrai ID utilisateur
+--    (Authentication > Users > cliquez sur votre user > copiez l'ID)
+-- 4. Remplacez 'PROJECT_ID_X' par les IDs retournés
+-- 5. Exécutez le SQL ligne par ligne (ou tout en une fois)
+-- 6. Vérifiez dans Table Editor que vos données sont là !
+`;
+
+            output.textContent = sql;
+
+            // Ajouter bouton de copie
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'copy-btn';
+            copyBtn.textContent = '📋 Copier le SQL';
+            copyBtn.onclick = () => {
+                navigator.clipboard.writeText(sql);
+                copyBtn.textContent = '✅ Copié !';
+                setTimeout(() => {
+                    copyBtn.textContent = '📋 Copier le SQL';
+                }, 2000);
+            };
+            output.parentElement.insertBefore(copyBtn, output.nextSibling);
+        }
+    </script>
+</body>
+</html>
