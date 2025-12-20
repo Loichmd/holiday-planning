@@ -1932,7 +1932,7 @@
                         </div>
                         <div class="project-actions" onclick="event.stopPropagation()">
                             <button class="project-action-btn" onclick="editProject('${p.id}')">✏️</button>
-                            ${projects.length > 1 ? `<button class="project-action-btn delete" onclick="deleteProject('${p.id}')">🗑️</button>` : ''}
+                            ${projects.length > 1 ? `<button class="project-action-btn delete" onclick="deleteProjectFunc('${p.id}')">🗑️</button>` : ''}
                         </div>
                     </div>
                 `;
@@ -1978,50 +1978,62 @@
             document.getElementById('projectModal').classList.remove('show');
         }
 
-        function saveProject() {
+        async function saveProject() {
             const name = document.getElementById('projectName').value.trim();
             if (!name) return alert('Le nom est obligatoire');
-            
+
             const travelers = document.getElementById('projectTravelers').value
                 .split(',')
                 .map(t => t.trim())
                 .filter(t => t);
-            
+
+            const projectData = {
+                name,
+                description: document.getElementById('projectDescription').value.trim(),
+                travelers
+            };
+
+            let result;
+
             if (editingProjectId) {
-                const project = projects.find(p => p.id === editingProjectId);
-                project.name = name;
-                project.description = document.getElementById('projectDescription').value.trim();
-                project.travelers = travelers;
+                // MISE À JOUR via Supabase
+                result = await updateProject(editingProjectId, projectData);
             } else {
-                projects.push({
-                    id: Date.now().toString(),
-                    name,
-                    description: document.getElementById('projectDescription').value.trim(),
-                    travelers
-                });
+                // CRÉATION via Supabase
+                result = await createProject(name, projectData.description, travelers);
             }
-            
-            saveData();
-            renderProjects();
-            closeProjectModal();
+
+            if (result.success) {
+                await loadData();
+                renderProjects();
+                closeProjectModal();
+            } else {
+                alert('Erreur lors de la sauvegarde: ' + result.error);
+            }
         }
 
-        function deleteProject(id) {
+        async function deleteProjectFunc(id) {
             if (projects.length === 1) {
                 alert('Vous ne pouvez pas supprimer votre dernier projet');
                 return;
             }
-            
+
             const project = projects.find(p => p.id === id);
             if (confirm(`Supprimer "${project.name}" et toutes ses activités ?`)) {
-                projects = projects.filter(p => p.id !== id);
-                activities = activities.filter(a => a.projectId !== id);
-                if (currentProject === id) {
-                    currentProject = projects[0].id;
+                const result = await deleteProject(id);
+
+                if (result.success) {
+                    if (currentProject === id) {
+                        await loadData();
+                        currentProject = projects[0]?.id;
+                    } else {
+                        await loadData();
+                    }
+                    renderProjects();
+                    renderCalendar();
+                } else {
+                    alert('Erreur lors de la suppression: ' + result.error);
                 }
-                saveData();
-                renderProjects();
-                renderCalendar();
             }
         }
 
@@ -2106,62 +2118,74 @@
             renderAttachmentsEnhanced();
         }
 
-        function saveActivity() {
+        async function saveActivity() {
             const title = document.getElementById('activityTitle').value.trim();
             const date = document.getElementById('activityDate').value;
-            
+
             if (!title || !date) {
                 alert('Le titre et la date sont obligatoires');
                 return;
             }
-            
+
             const category = document.querySelector('.category-btn.active').dataset.category;
             const travelers = document.getElementById('activityTravelers').value
                 .split(',')
                 .map(t => t.trim())
                 .filter(t => t);
-            
+
             const activityData = {
-                id: editingActivity?.id || Date.now().toString(),
-                projectId: currentProject,
+                project_id: currentProject,
                 title,
                 date,
-                time: document.getElementById('activityTime').value,
+                time: document.getElementById('activityTime').value || null,
                 duration: parseFloat(document.getElementById('activityDuration').value) || 1,
                 category,
                 travelers,
                 location: document.getElementById('activityLocation').value.trim(),
                 url: document.getElementById('activityUrl').value.trim(),
                 notes: document.getElementById('activityNotes').value.trim(),
-                attachments: currentAttachments
+                attachments: currentAttachments.length > 0 ? currentAttachments : null
             };
-            
-            if (editingActivity) {
-                const index = activities.findIndex(a => a.id === editingActivity.id);
-                activities[index] = activityData;
-            } else {
-                activities.push(activityData);
-            }
-            
-            saveData();
-            renderCalendar();
-            // Refresh planning view if active
-            if (currentView === 'planning') {
-                renderPlanningView();
-            }
-            closeActivityModal();
-        }
 
-        function deleteCurrentActivity() {
-            if (confirm('Supprimer cette activité ?')) {
-                activities = activities.filter(a => a.id !== editingActivity.id);
-                saveData();
+            let result;
+
+            if (editingActivity) {
+                // MISE À JOUR via Supabase
+                result = await updateActivity(editingActivity.id, activityData);
+            } else {
+                // CRÉATION via Supabase
+                result = await createActivity(activityData);
+            }
+
+            if (result.success) {
+                // Recharger les activités depuis Supabase
+                await loadData();
                 renderCalendar();
+
                 // Refresh planning view if active
                 if (currentView === 'planning') {
                     renderPlanningView();
                 }
                 closeActivityModal();
+            } else {
+                alert('Erreur lors de la sauvegarde: ' + result.error);
+            }
+        }
+
+        async function deleteCurrentActivity() {
+            if (confirm('Supprimer cette activité ?')) {
+                const result = await deleteActivity(editingActivity.id);
+
+                if (result.success) {
+                    await loadData();
+                    renderCalendar();
+                    if (currentView === 'planning') {
+                        renderPlanningView();
+                    }
+                    closeActivityModal();
+                } else {
+                    alert('Erreur lors de la suppression: ' + result.error);
+                }
             }
         }
 
