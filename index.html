@@ -1250,6 +1250,20 @@
                     </button>
                     <div class="project-dropdown" id="projectDropdown"></div>
                 </div>
+
+                <!-- Bouton de partage visible -->
+                <div id="shareButtonContainer" style="padding: 12px 20px; display: none;">
+                    <button class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="openShareModalForCurrentProject()">
+                        <span>👥</span>
+                        <span>Partager ce projet</span>
+                    </button>
+                </div>
+
+                <!-- Liste des collaborateurs -->
+                <div id="collaboratorsSection" style="padding: 0 20px 12px 20px; display: none;">
+                    <h4 style="font-size: 12px; font-weight: 600; color: #868e96; margin-bottom: 8px; text-transform: uppercase;">Collaborateurs</h4>
+                    <div id="collaboratorsMiniList"></div>
+                </div>
             </div>
             
             <div class="sidebar-content">
@@ -1726,6 +1740,70 @@
         }
 
         // ============================================
+        // AFFICHAGE DES COLLABORATEURS EN SIDEBAR
+        // ============================================
+
+        async function loadAndDisplayCollaborators(projectId) {
+            const result = await loadProjectShares(projectId);
+            const isOwner = isProjectOwner(projectId);
+            const project = projects.find(p => p.id === projectId);
+
+            if (result.success) {
+                const list = document.getElementById('collaboratorsMiniList');
+
+                // Ajouter le propriétaire
+                let html = '';
+                if (project && isOwner) {
+                    html += `
+                        <div style="display: flex; align-items: center; gap: 8px; padding: 6px; background: #f8f9fa; border-radius: 6px; margin-bottom: 6px;">
+                            <div style="width: 28px; height: 28px; border-radius: 50%; background: #339af0; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 600;">
+                                ${currentUser.email.substring(0, 2).toUpperCase()}
+                            </div>
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-size: 12px; font-weight: 600; color: #212529; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Vous</div>
+                                <div style="font-size: 10px; color: #868e96;">Propriétaire</div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Ajouter les collaborateurs
+                result.shares.forEach(share => {
+                    const initials = share.shared_with_email.substring(0, 2).toUpperCase();
+                    const isCurrentUser = share.shared_with_email === currentUser.email || share.shared_with_user_id === currentUser.id;
+
+                    html += `
+                        <div style="display: flex; align-items: center; gap: 8px; padding: 6px; background: #f8f9fa; border-radius: 6px; margin-bottom: 6px;">
+                            <div style="width: 28px; height: 28px; border-radius: 50%; background: #868e96; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 600;">
+                                ${initials}
+                            </div>
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-size: 12px; font-weight: 600; color: #212529; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    ${isCurrentUser ? 'Vous' : share.shared_with_email.split('@')[0]}
+                                </div>
+                                <div style="font-size: 10px; color: #868e96;">
+                                    ${share.permission === 'write' ? 'Peut modifier' : 'Lecture seule'}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                if (html === '') {
+                    list.innerHTML = '<p style="font-size: 12px; color: #868e96; text-align: center; padding: 8px;">Aucun collaborateur</p>';
+                } else {
+                    list.innerHTML = html;
+                }
+            }
+        }
+
+        function openShareModalForCurrentProject() {
+            if (currentProject) {
+                openShareModal(currentProject);
+            }
+        }
+
+        // ============================================
         // VARIABLES GLOBALES (suite)
         // ============================================
 
@@ -1979,12 +2057,22 @@
         }
 
         // Projects
-        function renderProjects() {
+        async function renderProjects() {
             const dropdown = document.getElementById('projectDropdown');
             const currentProj = projects.find(p => p.id === currentProject);
-            
+
             document.getElementById('currentProjectName').textContent = currentProj ? currentProj.name : 'Mes Projets';
-            
+
+            // Afficher/cacher le bouton de partage et les collaborateurs
+            if (currentProject) {
+                document.getElementById('shareButtonContainer').style.display = 'block';
+                document.getElementById('collaboratorsSection').style.display = 'block';
+                await loadAndDisplayCollaborators(currentProject);
+            } else {
+                document.getElementById('shareButtonContainer').style.display = 'none';
+                document.getElementById('collaboratorsSection').style.display = 'none';
+            }
+
             dropdown.innerHTML = projects.map(p => {
                 const count = activities.filter(a => a.projectId === p.id).length;
                 return `
@@ -1994,7 +2082,6 @@
                             <div class="project-item-count">${count} activité${count > 1 ? 's' : ''}</div>
                         </div>
                         <div class="project-actions" onclick="event.stopPropagation()">
-                            <button class="project-action-btn" onclick="openShareModal('${p.id}')" title="Partager">👥</button>
                             <button class="project-action-btn" onclick="editProject('${p.id}')" title="Modifier">✏️</button>
                             ${projects.length > 1 ? `<button class="project-action-btn delete" onclick="deleteProjectFunc('${p.id}')" title="Supprimer">🗑️</button>` : ''}
                         </div>
