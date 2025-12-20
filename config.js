@@ -3,11 +3,11 @@
 
 const SUPABASE_CONFIG = {
     // URL de votre projet Supabase
-    url: 'https://your-project-id.supabase.co',
+    url: 'https://tlvppqhpqgldvcnhnlun.supabase.co',
 
     // Clé publique (anon key) - SAFE pour être exposée côté client
     // Cette clé est protégée par Row Level Security (RLS)
-    anonKey: 'your-anon-key-here',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsdnBwcWhwcWdsZHZjbmhubHVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxNjc5NzMsImV4cCI6MjA4MTc0Mzk3M30.E8M3t8gygPgvdyI6Shp4mtwNGJhIqg2KW7JBdVXRd0A',
 
     // Options de configuration
     options: {

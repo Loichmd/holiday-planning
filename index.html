@@ -1100,7 +1100,36 @@
             padding: 20px 8px;
             font-size: 13px;
         }
+.attachment-size {
+    font-size: 11px;
+    color: #868e96;
+    margin-left: auto;
+    margin-right: 8px;
+}
+
+.collaborator-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.collaborator-email {
+    font-weight: 600;
+    font-size: 14px;
+    color: #212529;
+}
+
+.collaborator-permission {
+    font-size: 12px;
+    color: #868e96;
+    margin-top: 2px;
+}
 </style>
+
 </head>
 <body>
     <!-- Login Screen -->
@@ -1110,21 +1139,85 @@
             <h1 class="login-title">Planning Vacances</h1>
             <p class="login-subtitle">Organisez vos voyages en toute simplicité</p>
             
-            <div class="oauth-buttons">
-                <button class="oauth-btn" onclick="loginWithProvider('google')">
-                    <span>🔵</span>
-                    <span>Continuer avec Google</span>
-                </button>
-                <button class="oauth-btn" onclick="loginWithProvider('microsoft')">
-                    <span>🟦</span>
-                    <span>Continuer avec Microsoft</span>
-                </button>
-                <button class="oauth-btn" onclick="loginWithProvider('apple')">
-                    <span>⚫</span>
-                    <span>Continuer avec Apple</span>
+            <!-- Formulaire de connexion -->
+        <div id="loginForm">
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label class="form-label">📧 Email</label>
+                <input
+                    type="email"
+                    class="form-input"
+                    id="loginEmail"
+                    placeholder="votre@email.com"
+                    autocomplete="email"
+                >
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label class="form-label">🔒 Mot de passe</label>
+                <input
+                    type="password"
+                    class="form-input"
+                    id="loginPassword"
+                    placeholder="••••••••"
+                    autocomplete="current-password"
+                >
+            </div>
+
+            <button class="btn btn-primary" style="width: 100%; margin-bottom: 12px;" onclick="handleLogin()">
+                Se connecter
+            </button>
+
+            <div style="text-align: center; margin-top: 16px;">
+                <p style="font-size: 13px; color: #868e96; margin-bottom: 8px;">
+                    Pas encore de compte ?
+                </p>
+                <button class="btn btn-secondary" onclick="showSignupForm()">
+                    S'inscrire
                 </button>
             </div>
-            
+        </div>
+
+        <!-- Formulaire d'inscription (caché par défaut) -->
+        <div id="signupForm" style="display: none;">
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label class="form-label">📧 Email</label>
+                <input
+                    type="email"
+                    class="form-input"
+                    id="signupEmail"
+                    placeholder="votre@email.com"
+                    autocomplete="email"
+                >
+            </div>
+
+            <div class="form-group" style="margin-bottom: 8px;">
+                <label class="form-label">🔒 Mot de passe</label>
+                <input
+                    type="password"
+                    class="form-input"
+                    id="signupPassword"
+                    placeholder="Minimum 6 caractères"
+                    autocomplete="new-password"
+                >
+                <small style="font-size: 11px; color: #868e96; display: block; margin-top: 4px;">
+                    Au moins 6 caractères
+                </small>
+            </div>
+
+            <button class="btn btn-primary" style="width: 100%; margin-bottom: 12px; margin-top: 12px;" onclick="handleSignup()">
+                Créer mon compte
+            </button>
+
+            <div style="text-align: center; margin-top: 16px;">
+                <p style="font-size: 13px; color: #868e96; margin-bottom: 8px;">
+                    Déjà un compte ?
+                </p>
+                <button class="btn btn-secondary" onclick="showLoginForm()">
+                    Se connecter
+                </button>
+            </div>
+        </div>
+
             <div class="divider">ou</div>
             
             <div class="demo-section">
@@ -1147,7 +1240,7 @@
                             <div class="user-email" id="userEmail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="2842474046684d50494558444d064b4745">[email&#160;protected]</a></div>
                         </div>
                     </div>
-                    <button class="logout-btn" onclick="logout()">Déconnexion</button>
+                    <button class="logout-btn" onclick="handleLogout()">Déconnexion</button>
                 </div>
                 
                 <div class="project-selector">
@@ -1302,7 +1395,7 @@
                     <div class="form-group">
                         <label class="form-label">Pièces jointes</label>
                         <div class="file-upload" onclick="document.getElementById('fileInput').click()">
-                            <input type="file" id="fileInput" multiple onchange="handleFiles(this.files)">
+                            <input type="file" id="fileInput" multiple onchange="handleFilesWithValidation(this.files)">
                             <div>📎 Cliquez pour ajouter des fichiers</div>
                         </div>
                         <div class="attachment-list" id="attachmentList"></div>
@@ -1350,7 +1443,226 @@
         </div>
     </div>
 
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    
+    <!-- Share Modal -->
+    <div class="modal" id="shareModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Partager le projet</h3>
+                <button class="modal-close" onclick="closeShareModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Email du collaborateur</label>
+                    <input type="email" class="form-input" id="shareEmail" placeholder="email@exemple.com">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Permission</label>
+                    <select class="form-select" id="sharePermission">
+                        <option value="read">Lecture seule</option>
+                        <option value="write">Peut modifier</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-primary" style="width: 100%;" onclick="handleShareProject()">Partager</button>
+
+                <div class="collaborators-list" id="collaboratorsList" style="margin-top: 24px;"></div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Configuration -->
+    <script src="config.js"></script>
+
+    <!-- Validation des fichiers -->
+    <script src="file-validation.js"></script>
+
+    <!-- Intégration Supabase -->
+    <script src="app-supabase.js"></script>
+
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+    <script>
+        // ============================================
+        // GESTION DE L'AUTHENTIFICATION
+        // ============================================
+
+        function showLoginForm() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('signupForm').style.display = 'none';
+        }
+
+        function showSignupForm() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('signupForm').style.display = 'block';
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                alert('Veuillez remplir tous les champs');
+                return;
+            }
+
+            const result = await login(email, password);
+
+            if (result.success) {
+                currentUser = result.user;
+                showApp();
+            } else {
+                alert('Erreur de connexion: ' + result.error);
+            }
+        }
+
+        async function handleSignup() {
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value;
+
+            if (!email || !password) {
+                alert('Veuillez remplir tous les champs');
+                return;
+            }
+
+            if (password.length < 6) {
+                alert('Le mot de passe doit contenir au moins 6 caractères');
+                return;
+            }
+
+            const result = await signup(email, password);
+
+            if (result.success) {
+                alert('Compte créé avec succès ! Vous pouvez maintenant vous connecter.');
+                showLoginForm();
+                document.getElementById('loginEmail').value = email;
+            } else {
+                alert('Erreur lors de la création du compte: ' + result.error);
+            }
+        }
+
+        async function handleLogout() {
+            if (!confirm('Voulez-vous vraiment vous déconnecter ?')) {
+                return;
+            }
+
+            const result = await logout();
+
+            if (result.success) {
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('appContainer').classList.remove('show');
+                document.getElementById('addBtn').style.display = 'none';
+            }
+        }
+
+        function loginDemo() {
+            currentUser = {
+                id: 'demo',
+                email: 'demo@planningvacances.com',
+                user_metadata: { name: 'Utilisateur Démo' }
+            };
+            showApp();
+        }
+
+        function showApp() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appContainer').classList.add('show');
+            document.getElementById('addBtn').style.display = 'flex';
+
+            const initials = currentUser.email ? currentUser.email.substring(0, 2).toUpperCase() : 'U';
+            document.getElementById('userAvatar').textContent = initials;
+            document.getElementById('userName').textContent = currentUser.email || 'Utilisateur';
+            document.getElementById('userEmail').textContent = currentUser.email || '';
+
+            loadData();
+            renderCalendar();
+            renderProjects();
+        }
+
+        // ============================================
+        // PARTAGE DE PROJETS
+        // ============================================
+
+        let currentSharingProjectId = null;
+
+        async function openShareModal(projectId) {
+            currentSharingProjectId = projectId;
+            document.getElementById('shareEmail').value = '';
+            document.getElementById('sharePermission').value = 'read';
+            document.getElementById('shareModal').classList.add('show');
+            await loadCollaborators(projectId);
+        }
+
+        function closeShareModal() {
+            document.getElementById('shareModal').classList.remove('show');
+            currentSharingProjectId = null;
+        }
+
+        async function handleShareProject() {
+            const email = document.getElementById('shareEmail').value.trim();
+            const permission = document.getElementById('sharePermission').value;
+
+            if (!email) {
+                alert('Veuillez entrer un email');
+                return;
+            }
+
+            const result = await shareProject(currentSharingProjectId, email, permission);
+
+            if (result.success) {
+                alert(`Projet partagé avec ${email} !`);
+                document.getElementById('shareEmail').value = '';
+                await loadCollaborators(currentSharingProjectId);
+            } else {
+                alert('Erreur: ' + result.error);
+            }
+        }
+
+        async function loadCollaborators(projectId) {
+            const result = await loadProjectShares(projectId);
+
+            if (result.success) {
+                const list = document.getElementById('collaboratorsList');
+
+                if (result.shares.length === 0) {
+                    list.innerHTML = '<p style="text-align: center; color: #868e96; font-size: 13px;">Aucun collaborateur</p>';
+                    return;
+                }
+
+                list.innerHTML = '<h4 style="font-size: 13px; font-weight: 600; color: #495057; margin-bottom: 12px;">Collaborateurs</h4>' +
+                    result.shares.map(share => `
+                        <div class="collaborator-item">
+                            <div>
+                                <div class="collaborator-email">${share.shared_with_email}</div>
+                                <div class="collaborator-permission">
+                                    ${share.permission === 'write' ? '✏️ Peut modifier' : '👁️ Lecture seule'}
+                                </div>
+                            </div>
+                            <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="handleRemoveShare('${share.id}')">✕</button>
+                        </div>
+                    `).join('');
+            }
+        }
+
+        async function handleRemoveShare(shareId) {
+            if (!confirm('Retirer ce collaborateur ?')) {
+                return;
+            }
+
+            const result = await removeProjectShare(shareId);
+
+            if (result.success) {
+                await loadCollaborators(currentSharingProjectId);
+            } else {
+                alert('Erreur: ' + result.error);
+            }
+        }
+
+<script>
         // Variables globales
         let currentUser = null;
         let projects = [];
@@ -1757,7 +2069,7 @@
             document.getElementById('activityNotes').value = editingActivity.notes || '';
             
             selectCategory(editingActivity.category);
-            renderAttachments();
+            renderAttachmentsEnhanced();
             
             document.getElementById('deleteBtn').style.display = 'block';
             document.getElementById('activityModal').classList.add('show');
@@ -1781,13 +2093,13 @@
                         data: e.target.result,
                         type: file.type
                     });
-                    renderAttachments();
+                    renderAttachmentsEnhanced();
                 };
                 reader.readAsDataURL(file);
             });
         }
 
-        function renderAttachments() {
+        function renderAttachments_OLD() {
             const list = document.getElementById('attachmentList');
             list.innerHTML = currentAttachments.map((att, idx) => `
                 <div class="attachment-item">
@@ -1800,7 +2112,7 @@
 
         function removeAttachment(index) {
             currentAttachments.splice(index, 1);
-            renderAttachments();
+            renderAttachmentsEnhanced();
         }
 
         function saveActivity() {
@@ -2118,7 +2430,59 @@
             `;
         }
         
-        // Init
+        
+        function renderAttachmentsEnhanced() {
+            const list = document.getElementById('attachmentList');
+            list.innerHTML = currentAttachments.map((att, idx) => {
+                const icon = att.type && att.type.startsWith('image/') ? '🖼️' : (att.type === 'application/pdf' ? '📄' : '📎');
+                const size = att.size ? formatFileSize(att.size) : '';
+
+                return `
+                    <div class="attachment-item">
+                        <span class="attachment-icon">${icon}</span>
+                        <span class="attachment-name">${att.name}</span>
+                        ${size ? `<span class="attachment-size">${size}</span>` : ''}
+                        <button class="attachment-remove" onclick="removeAttachment(${idx})">✕</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function handleFilesWithValidation(files) {
+            const validation = validateFiles(files);
+
+            if (!validation.valid) {
+                alert('❌ Erreurs de validation :\n\n' + validation.errors.join('\n\n'));
+                document.getElementById('fileInput').value = '';
+                return;
+            }
+
+            validation.validFiles.forEach(file => {
+                const reader = new FileReader();
+
+                reader.onload = (e) => {
+                    currentAttachments.push({
+                        name: file.name,
+                        data: e.target.result,
+                        type: file.type,
+                        size: file.size,
+                        file: file
+                    });
+                    renderAttachmentsEnhanced();
+                };
+
+                reader.readAsDataURL(file);
+            });
+
+            document.getElementById('fileInput').value = '';
+
+            if (validation.validFiles.length > 0) {
+                console.log(`✅ ${validation.validFiles.length} fichier(s) ajouté(s)`);
+            }
+        }
+
+
+// Init
         checkAuth();
     </script>
 </body>
