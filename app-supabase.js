@@ -138,10 +138,9 @@ async function checkSession() {
  */
 async function loadProjects() {
     try {
+        // Utiliser la fonction SQL qui charge les projets propres + partagés
         const { data, error } = await supabaseClient
-            .from('projects')
-            .select('*')
-            .order('created_at', { ascending: false });
+            .rpc('get_all_user_projects');
 
         if (error) throw error;
 
