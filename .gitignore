@@ -38,3 +38,6 @@ logs/
 # Build artifacts
 dist/
 build/
+
+# Archive folder
+OLD/
