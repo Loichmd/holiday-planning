@@ -1662,12 +1662,13 @@
             }
         }
 
-<script>
-        // Variables globales
-        let currentUser = null;
-        let projects = [];
-        let currentProject = null;
-        let activities = [];
+        // ============================================
+        // VARIABLES GLOBALES (suite)
+        // ============================================
+
+        // Variables déjà déclarées dans app-supabase.js :
+        // currentUser, projects, activities, currentProject
+
         let currentDate = new Date();
         let selectedDate = new Date();
         let editingActivity = null;
@@ -1731,49 +1732,39 @@
             }
         }
 
-        function showApp() {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('appContainer').classList.add('show');
-            document.getElementById('addBtn').style.display = 'flex';
-            
-            // Update user info
-            const initials = currentUser.name.split(' ').map(n => n[0]).join('');
-            document.getElementById('userAvatar').textContent = initials;
-            document.getElementById('userName').textContent = currentUser.name;
-            document.getElementById('userEmail').textContent = currentUser.email;
-            
-            loadData();
-            renderCalendar();
-            renderProjects();
-        }
-
         function getStorageKey() {
             return `planningVoyages_${currentUser.id}`;
         }
 
-        function loadData() {
-            const data = localStorage.getItem(getStorageKey());
-            if (data) {
-                const parsed = JSON.parse(data);
-                projects = parsed.projects || [];
-                activities = parsed.activities || [];
+        async function loadData() {
+            // Charger les projets depuis Supabase
+            const result = await loadProjects();
+
+            if (result.success) {
+                projects = result.projects;
+
+                // Si aucun projet, en créer un par défaut
+                if (projects.length === 0) {
+                    await createProject('Mon premier voyage', '', []);
+                    await loadProjects();
+                    projects = (await loadProjects()).projects;
+                }
+
+                currentProject = projects[0].id;
+
+                // Charger les activités du projet actuel
+                if (currentProject) {
+                    const activitiesResult = await loadActivities(currentProject);
+                    if (activitiesResult.success) {
+                        activities = activitiesResult.activities;
+                    }
+                }
             }
-            
-            if (projects.length === 0) {
-                projects.push({
-                    id: Date.now().toString(),
-                    name: 'Mon premier voyage',
-                    description: '',
-                    travelers: []
-                });
-                saveData();
-            }
-            
-            currentProject = projects[0].id;
         }
 
         function saveData() {
-            localStorage.setItem(getStorageKey(), JSON.stringify({ projects, activities }));
+            // Plus besoin avec Supabase - les données sont sauvegardées automatiquement
+            console.log('saveData() appelé - données sauvegardées via Supabase');
         }
 
         // Calendar functions
@@ -2482,8 +2473,24 @@
         }
 
 
-// Init
-        checkAuth();
+        // ============================================
+        // INITIALISATION AU CHARGEMENT
+        // ============================================
+
+        async function initApp() {
+            const result = await checkSession();
+
+            if (result.success) {
+                currentUser = result.user;
+                showApp();
+            } else {
+                // Afficher l'écran de login
+                document.getElementById('loginScreen').style.display = 'flex';
+            }
+        }
+
+        // Démarrer l'app quand la page est chargée
+        document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
 </html>
