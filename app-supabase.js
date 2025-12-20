@@ -239,25 +239,22 @@ async function deleteProject(projectId) {
  */
 async function shareProject(projectId, email, permission = 'read') {
     try {
+        // Utiliser la fonction SQL qui gère les permissions correctement
         const { data, error } = await supabaseClient
-            .from('project_shares')
-            .insert({
-                project_id: projectId,
-                shared_with_email: email,
-                shared_by_user_id: currentUser.id,
-                permission: permission
-            })
-            .select()
-            .single();
+            .rpc('share_project_as_collaborator', {
+                p_project_id: projectId,
+                p_shared_with_email: email,
+                p_permission: permission
+            });
 
         if (error) throw error;
 
-        return { success: true, share: data };
+        return { success: true, share: { id: data } };
 
     } catch (error) {
         console.error('Erreur shareProject:', error);
 
-        if (error.code === '23505') {
+        if (error.message.includes('duplicate')) {
             return { success: false, error: 'Déjà partagé avec cet utilisateur' };
         }
 
@@ -290,10 +287,11 @@ async function loadProjectShares(projectId) {
  */
 async function removeProjectShare(shareId) {
     try {
-        const { error } = await supabaseClient
-            .from('project_shares')
-            .delete()
-            .eq('id', shareId);
+        // Utiliser la fonction SQL qui gère les permissions correctement
+        const { data, error } = await supabaseClient
+            .rpc('remove_project_share_as_collaborator', {
+                p_share_id: shareId
+            });
 
         if (error) throw error;
 
