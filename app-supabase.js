@@ -332,7 +332,12 @@ async function loadActivities(projectId) {
 
         if (error) throw error;
 
-        activities = data || [];
+        // Convertir snake_case (Supabase) vers camelCase (app)
+        activities = (data || []).map(activity => ({
+            ...activity,
+            projectId: activity.project_id  // Ajouter projectId pour compatibilité
+        }));
+
         return { success: true, activities };
 
     } catch (error) {
@@ -354,8 +359,10 @@ async function createActivity(activityData) {
 
         if (error) throw error;
 
-        activities.push(data);
-        return { success: true, activity: data };
+        // Convertir pour compatibilité
+        const activity = { ...data, projectId: data.project_id };
+        activities.push(activity);
+        return { success: true, activity };
 
     } catch (error) {
         console.error('Erreur createActivity:', error);
@@ -377,12 +384,15 @@ async function updateActivity(activityId, updates) {
 
         if (error) throw error;
 
+        // Convertir pour compatibilité
+        const activity = { ...data, projectId: data.project_id };
+
         const index = activities.findIndex(a => a.id === activityId);
         if (index !== -1) {
-            activities[index] = { ...activities[index], ...data };
+            activities[index] = { ...activities[index], ...activity };
         }
 
-        return { success: true, activity: data };
+        return { success: true, activity };
 
     } catch (error) {
         console.error('Erreur updateActivity:', error);
