@@ -1452,20 +1452,22 @@
                 <button class="modal-close" onclick="closeShareModal()">✕</button>
             </div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">Email du collaborateur</label>
-                    <input type="email" class="form-input" id="shareEmail" placeholder="email@exemple.com">
-                </div>
+                <div id="shareForm">
+                    <div class="form-group">
+                        <label class="form-label">Email du collaborateur</label>
+                        <input type="email" class="form-input" id="shareEmail" placeholder="email@exemple.com">
+                    </div>
 
-                <div class="form-group">
-                    <label class="form-label">Permission</label>
-                    <select class="form-select" id="sharePermission">
-                        <option value="read">Lecture seule</option>
-                        <option value="write">Peut modifier</option>
-                    </select>
-                </div>
+                    <div class="form-group">
+                        <label class="form-label">Permission</label>
+                        <select class="form-select" id="sharePermission">
+                            <option value="read">Lecture seule</option>
+                            <option value="write">Peut modifier</option>
+                        </select>
+                    </div>
 
-                <button class="btn btn-primary" style="width: 100%;" onclick="handleShareProject()">Partager</button>
+                    <button class="btn btn-primary" style="width: 100%;" onclick="handleShareProject()">Partager</button>
+                </div>
 
                 <div class="collaborators-list" id="collaboratorsList" style="margin-top: 24px;"></div>
             </div>
@@ -1595,6 +1597,14 @@
             document.getElementById('shareEmail').value = '';
             document.getElementById('sharePermission').value = 'read';
             document.getElementById('shareModal').classList.add('show');
+
+            // Afficher/cacher le formulaire d'ajout selon les permissions
+            const canShare = isProjectOwner(projectId) || await canEditProject(projectId);
+            const shareForm = document.getElementById('shareForm');
+            if (shareForm) {
+                shareForm.style.display = canShare ? 'block' : 'none';
+            }
+
             await loadCollaborators(projectId);
         }
 
@@ -1625,39 +1635,91 @@
 
         async function loadCollaborators(projectId) {
             const result = await loadProjectShares(projectId);
+            const isOwner = isProjectOwner(projectId);
+            const project = projects.find(p => p.id === projectId);
 
             if (result.success) {
                 const list = document.getElementById('collaboratorsList');
+                const canManageCollaborators = isOwner || await canEditProject(projectId);
+
+                // Afficher le propriétaire
+                let ownerHtml = '';
+                if (project) {
+                    // Trouver l'email du propriétaire (pour l'instant on utilise currentUser si c'est le propriétaire)
+                    const ownerEmail = isOwner ? currentUser.email : 'Propriétaire';
+                    ownerHtml = `
+                        <div class="collaborator-item" style="background: #e7f5ff; border: 1px solid #339af0;">
+                            <div>
+                                <div class="collaborator-email">
+                                    ${ownerEmail}
+                                    ${isOwner ? '<span style="color: #51cf66; font-size: 11px; margin-left: 6px;">(Vous)</span>' : ''}
+                                </div>
+                                <div class="collaborator-permission">
+                                    👑 Propriétaire
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
 
                 if (result.shares.length === 0) {
-                    list.innerHTML = '<p style="text-align: center; color: #868e96; font-size: 13px;">Aucun collaborateur</p>';
+                    list.innerHTML = '<h4 style="font-size: 13px; font-weight: 600; color: #495057; margin-bottom: 12px;">Membres du projet</h4>' +
+                        ownerHtml +
+                        '<p style="text-align: center; color: #868e96; font-size: 13px; margin-top: 12px;">Aucun collaborateur</p>';
                     return;
                 }
 
-                list.innerHTML = '<h4 style="font-size: 13px; font-weight: 600; color: #495057; margin-bottom: 12px;">Collaborateurs</h4>' +
-                    result.shares.map(share => `
-                        <div class="collaborator-item">
-                            <div>
-                                <div class="collaborator-email">${share.shared_with_email}</div>
-                                <div class="collaborator-permission">
-                                    ${share.permission === 'write' ? '✏️ Peut modifier' : '👁️ Lecture seule'}
+                list.innerHTML = '<h4 style="font-size: 13px; font-weight: 600; color: #495057; margin-bottom: 12px;">Membres du projet</h4>' +
+                    ownerHtml +
+                    '<div style="margin-top: 12px;"></div>' +
+                    result.shares.map(share => {
+                        const isCurrentUser = share.shared_with_email === currentUser.email || share.shared_with_user_id === currentUser.id;
+                        const canRemove = canManageCollaborators || isCurrentUser;
+                        const buttonText = isCurrentUser ? 'Me retirer' : '✕';
+
+                        return `
+                            <div class="collaborator-item">
+                                <div>
+                                    <div class="collaborator-email">
+                                        ${share.shared_with_email}
+                                        ${isCurrentUser ? '<span style="color: #51cf66; font-size: 11px; margin-left: 6px;">(Vous)</span>' : ''}
+                                    </div>
+                                    <div class="collaborator-permission">
+                                        ${share.permission === 'write' ? '✏️ Peut modifier' : '👁️ Lecture seule'}
+                                    </div>
                                 </div>
+                                ${canRemove ? `<button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="handleRemoveShare('${share.id}', ${isCurrentUser})">${buttonText}</button>` : ''}
                             </div>
-                            <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="handleRemoveShare('${share.id}')">✕</button>
-                        </div>
-                    `).join('');
+                        `;
+                    }).join('');
             }
         }
 
-        async function handleRemoveShare(shareId) {
-            if (!confirm('Retirer ce collaborateur ?')) {
+        async function handleRemoveShare(shareId, isCurrentUser = false) {
+            const message = isCurrentUser ? 'Voulez-vous vous retirer de ce projet ?' : 'Retirer ce collaborateur ?';
+
+            if (!confirm(message)) {
                 return;
             }
 
             const result = await removeProjectShare(shareId);
 
             if (result.success) {
-                await loadCollaborators(currentSharingProjectId);
+                if (isCurrentUser) {
+                    // Si l'utilisateur se retire, fermer le modal et recharger les projets
+                    closeShareModal();
+                    await loadData();
+
+                    // Si c'était le projet actuel, sélectionner un autre projet
+                    if (currentProject === currentSharingProjectId) {
+                        currentProject = projects[0]?.id;
+                    }
+
+                    renderProjects();
+                    renderCalendar();
+                } else {
+                    await loadCollaborators(currentSharingProjectId);
+                }
             } else {
                 alert('Erreur: ' + result.error);
             }
@@ -1932,8 +1994,9 @@
                             <div class="project-item-count">${count} activité${count > 1 ? 's' : ''}</div>
                         </div>
                         <div class="project-actions" onclick="event.stopPropagation()">
-                            <button class="project-action-btn" onclick="editProject('${p.id}')">✏️</button>
-                            ${projects.length > 1 ? `<button class="project-action-btn delete" onclick="deleteProjectFunc('${p.id}')">🗑️</button>` : ''}
+                            <button class="project-action-btn" onclick="openShareModal('${p.id}')" title="Partager">👥</button>
+                            <button class="project-action-btn" onclick="editProject('${p.id}')" title="Modifier">✏️</button>
+                            ${projects.length > 1 ? `<button class="project-action-btn delete" onclick="deleteProjectFunc('${p.id}')" title="Supprimer">🗑️</button>` : ''}
                         </div>
                     </div>
                 `;

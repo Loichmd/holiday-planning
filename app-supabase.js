@@ -306,13 +306,45 @@ async function removeProjectShare(shareId) {
 }
 
 /**
+ * Vérifier si l'utilisateur est le propriétaire du projet
+ */
+function isProjectOwner(projectId) {
+    if (!currentUser) return false;
+    const project = projects.find(p => p.id === projectId);
+    return project && project.user_id === currentUser.id;
+}
+
+/**
  * Vérifier si l'utilisateur peut modifier un projet
  */
-function canEditProject(project) {
-    // Pour l'instant, seul le propriétaire peut modifier
-    // TODO: Ajouter support des partages
+async function canEditProject(projectId) {
     if (!currentUser) return false;
-    return project.user_id === currentUser.id;
+
+    try {
+        // Vérifier si propriétaire
+        if (isProjectOwner(projectId)) {
+            return true;
+        }
+
+        // Vérifier si collaborateur avec permission 'write'
+        const { data, error } = await supabaseClient
+            .from('project_shares')
+            .select('permission')
+            .eq('project_id', projectId)
+            .or(`shared_with_user_id.eq.${currentUser.id},shared_with_email.eq.${currentUser.email}`)
+            .single();
+
+        if (error && error.code !== 'PGRST116') {
+            console.error('Erreur canEditProject:', error);
+            return false;
+        }
+
+        return data && data.permission === 'write';
+
+    } catch (error) {
+        console.error('Erreur canEditProject:', error);
+        return false;
+    }
 }
 
 // ============================================
