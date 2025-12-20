@@ -11,7 +11,7 @@ RETURNS TABLE (
     user_id UUID,
     name TEXT,
     description TEXT,
-    travelers JSONB,
+    travelers TEXT[],
     created_at TIMESTAMPTZ,
     updated_at TIMESTAMPTZ,
     is_shared BOOLEAN,
