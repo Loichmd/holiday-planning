@@ -1,0 +1,59 @@
+# Docker Compose pour déploiement complet (optionnel)
+# Utilisé si tu veux tout déployer ensemble sur Dokploy
+
+version: '3.8'
+
+services:
+  # Frontend (Nginx avec fichiers statiques)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  # Backend (Optionnel - uniquement si tu utilises le backend Node.js)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+# Si tu veux PostgreSQL local au lieu de Supabase (non recommandé)
+# Tu peux décommenter cette section:
+#
+#  postgres:
+#    image: postgres:15-alpine
+#    environment:
+#      POSTGRES_DB: planning_vacances
+#      POSTGRES_USER: ${POSTGRES_USER}
+#      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+#    volumes:
+#      - postgres_data:/var/lib/postgresql/data
+#      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+#    ports:
+#      - "5432:5432"
+#    restart: unless-stopped
+#
+#volumes:
+#  postgres_data:

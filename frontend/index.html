@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planning Vacances - Production</title>
+
+    <!-- Import du CSS depuis le fichier original (on garde le même) -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-container" id="loginScreen">
+        <div class="login-box">
+            <div class="login-logo">✈️</div>
+            <h1 class="login-title">Planning Vacances</h1>
+            <p class="login-subtitle">Organisez vos voyages en toute simplicité</p>
+
+            <div class="oauth-buttons">
+                <button class="oauth-btn" onclick="loginWithProvider('google')">
+                    <span>🔵</span>
+                    <span>Continuer avec Google</span>
+                </button>
+                <button class="oauth-btn" onclick="loginWithProvider('azure')">
+                    <span>🟦</span>
+                    <span>Continuer avec Microsoft</span>
+                </button>
+                <button class="oauth-btn" onclick="loginWithProvider('apple')" style="display: none;">
+                    <span>⚫</span>
+                    <span>Continuer avec Apple</span>
+                </button>
+            </div>
+
+            <div class="divider">Migration</div>
+
+            <div class="demo-section">
+                <p class="demo-title">Migrer vos données localStorage</p>
+                <button class="demo-btn" id="migrateBtn" onclick="startMigration()" style="display: none;">
+                    Importer mes données
+                </button>
+                <p class="demo-title" style="font-size: 11px; color: #868e96; margin-top: 10px;">
+                    Connectez-vous d'abord pour accéder à la migration
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Container (même HTML que l'original) -->
+    <div class="app-container" id="appContainer">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="header">
+                <div class="header-top">
+                    <div class="user-profile">
+                        <div class="user-avatar" id="userAvatar">JD</div>
+                        <div class="user-info">
+                            <div class="user-name" id="userName">John Doe</div>
+                            <div class="user-email" id="userEmail">john@example.com</div>
+                        </div>
+                    </div>
+                    <button class="logout-btn" onclick="logout()">Déconnexion</button>
+                </div>
+
+                <div class="project-selector">
+                    <button class="project-btn" onclick="toggleProjectDropdown()">
+                        <span id="currentProjectName">Mes Projets</span>
+                        <span style="margin-left: auto;">▼</span>
+                    </button>
+                    <div class="project-dropdown" id="projectDropdown"></div>
+                </div>
+            </div>
+
+            <div class="sidebar-content">
+                <div class="date-display">
+                    <div class="date-info">
+                        <div class="current-date" id="currentDay">15</div>
+                        <div class="current-month" id="currentMonth">DÉC 2025</div>
+                    </div>
+                    <div class="nav-btns">
+                        <button class="nav-btn" onclick="previousMonth()">‹</button>
+                        <button class="nav-btn" onclick="nextMonth()">›</button>
+                    </div>
+                </div>
+
+                <div class="mini-calendar">
+                    <div class="calendar-weekdays">
+                        <div class="calendar-weekday">L</div>
+                        <div class="calendar-weekday">M</div>
+                        <div class="calendar-weekday">M</div>
+                        <div class="calendar-weekday">J</div>
+                        <div class="calendar-weekday">V</div>
+                        <div class="calendar-weekday">S</div>
+                        <div class="calendar-weekday">D</div>
+                    </div>
+                    <div class="calendar-days" id="calendarDays"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="content-header">
+                <div class="view-tabs">
+                    <button class="view-tab active" onclick="switchView('timeline')">
+                        📅 Vue Calendrier
+                    </button>
+                    <button class="view-tab" onclick="switchView('planning')">
+                        📊 Planning Hebdomadaire
+                    </button>
+                </div>
+                <h2 class="content-title" id="contentTitle">Aujourd'hui</h2>
+                <p class="content-subtitle" id="contentSubtitle">Aucune activité prévue</p>
+            </div>
+
+            <div class="events-container" id="timelineContainer">
+                <div class="events-timeline" id="eventsTimeline">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📅</div>
+                        <div class="empty-state-text">Aucune activité ce jour</div>
+                        <div class="empty-state-hint">Cliquez sur + pour ajouter une activité</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Planning View -->
+            <div class="planning-view" id="planningView">
+                <div class="planning-header">
+                    <div class="planning-header-content">
+                        <div>
+                            <h2 class="planning-main-title">Planning complet du voyage</h2>
+                            <p class="planning-subtitle">Vue annuelle - Scroll pour naviguer</p>
+                        </div>
+                        <div class="year-navigation">
+                            <button class="year-btn" onclick="changeYear(-1)">‹ Année précédente</button>
+                            <span class="year-display" id="currentYearDisplay">2025</span>
+                            <button class="year-btn" onclick="changeYear(1)">Année suivante ›</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="weeks-container" id="weeksContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAB -->
+    <button class="fab" id="addBtn" onclick="openActivityModal()" style="display: none;">+</button>
+
+    <!-- Activity Modal (même HTML que l'original) -->
+    <div class="modal" id="activityModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Nouvelle activité</h3>
+                <button class="modal-close" onclick="closeActivityModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="activityForm">
+                    <div class="form-group">
+                        <label class="form-label">Titre *</label>
+                        <input type="text" class="form-input" id="activityTitle" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Date *</label>
+                            <input type="date" class="form-input" id="activityDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Heure</label>
+                            <input type="time" class="form-input" id="activityTime">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Durée (heures)</label>
+                        <input type="number" class="form-input" id="activityDuration" value="1" min="0.5" step="0.5">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Catégorie *</label>
+                        <div class="category-selector">
+                            <button type="button" class="category-btn active" data-category="activite" onclick="selectCategory('activite')">
+                                🎯 Activité
+                            </button>
+                            <button type="button" class="category-btn" data-category="avion" onclick="selectCategory('avion')">
+                                ✈️ Vol
+                            </button>
+                            <button type="button" class="category-btn" data-category="hotel" onclick="selectCategory('hotel')">
+                                🏨 Hôtel
+                            </button>
+                            <button type="button" class="category-btn" data-category="restaurant" onclick="selectCategory('restaurant')">
+                                🍽️ Repas
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Voyageurs (séparés par virgules)</label>
+                        <input type="text" class="form-input" id="activityTravelers" placeholder="Marie, Thomas, Sophie">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Lieu</label>
+                        <input type="text" class="form-input" id="activityLocation" placeholder="Adresse ou nom du lieu">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">URL de référence</label>
+                        <input type="url" class="form-input" id="activityUrl" placeholder="https://">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Pièces jointes</label>
+                        <div class="file-upload" onclick="document.getElementById('fileInput').click()">
+                            <input type="file" id="fileInput" multiple onchange="handleFiles(this.files)">
+                            <div>📎 Cliquez pour ajouter des fichiers</div>
+                        </div>
+                        <div class="attachment-list" id="attachmentList"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-textarea" id="activityNotes"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeActivityModal()">Annuler</button>
+                <button class="btn btn-danger" id="deleteBtn" onclick="deleteCurrentActivity()" style="display: none;">Supprimer</button>
+                <button class="btn btn-primary" onclick="saveActivity()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Modal (même HTML que l'original) -->
+    <div class="modal" id="projectModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="projectModalTitle">Nouveau voyage</h3>
+                <button class="modal-close" onclick="closeProjectModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Nom du voyage *</label>
+                    <input type="text" class="form-input" id="projectName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-textarea" id="projectDescription"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Voyageurs (séparés par virgules)</label>
+                    <input type="text" class="form-input" id="projectTravelers" placeholder="Marie, Thomas, Sophie">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeProjectModal()">Annuler</button>
+                <button class="btn btn-primary" onclick="saveProject()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="./app.js"></script>
+</body>
+</html>
