@@ -58,7 +58,39 @@ Une fois configuré, votre application sera accessible à l'adresse :
 - HTML5
 - CSS3 (Responsive design)
 - JavaScript Vanilla (pas de framework)
-- localStorage pour la persistance des données
+- Supabase (base de données et authentification)
+- localStorage pour la persistance locale (mode hors ligne)
+
+## Sécurité avec Supabase
+
+### Configuration sécurisée pour GitHub Pages public
+
+Ce projet utilise Supabase avec une configuration sécurisée adaptée à un repository public :
+
+1. **Seule la clé publique (`anon key`) est exposée** dans `config.js`
+2. **Row Level Security (RLS) protège toutes les données**
+3. **Chaque utilisateur ne voit que ses propres données**
+
+### Configuration rapide
+
+1. Créez un compte sur [Supabase](https://supabase.com)
+2. Récupérez vos clés dans **Settings > API**
+3. Éditez `config.js` avec votre URL et votre `anon key`
+4. Configurez les policies RLS (voir [SECURITY.md](SECURITY.md))
+
+### Documentation de sécurité complète
+
+📖 **Lisez le guide complet** : [SECURITY.md](SECURITY.md)
+
+Ce guide contient :
+- Explication des 2 types de clés Supabase
+- Configuration complète des Row Level Security (RLS)
+- Schéma de base de données
+- Policies SQL pour protéger vos données
+- Checklist de sécurité
+- Configuration de l'authentification OAuth
+
+⚠️ **Important** : Sans RLS, vos données seront accessibles à tous, même avec la clé publique !
 
 ## Licence
 
