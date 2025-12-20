@@ -160,44 +160,45 @@ RETURNS TABLE (
 ) AS $$
 BEGIN
     RETURN QUERY
-    -- Mes propres projets
-    SELECT
-        p.id,
-        p.user_id,
-        p.name,
-        p.description,
-        p.travelers,
-        p.created_at,
-        p.updated_at,
-        FALSE as is_shared,
-        'owner'::TEXT as permission
-    FROM projects p
-    WHERE p.user_id = auth.uid()
+    SELECT * FROM (
+        -- Mes propres projets
+        SELECT
+            p.id,
+            p.user_id,
+            p.name,
+            p.description,
+            p.travelers,
+            p.created_at,
+            p.updated_at,
+            FALSE as is_shared,
+            'owner'::TEXT as permission
+        FROM projects p
+        WHERE p.user_id = auth.uid()
 
-    UNION
+        UNION
 
-    -- Projets partagés avec moi
-    SELECT
-        p.id,
-        p.user_id,
-        p.name,
-        p.description,
-        p.travelers,
-        p.created_at,
-        p.updated_at,
-        TRUE as is_shared,
-        ps.permission
-    FROM projects p
-    INNER JOIN project_shares ps ON ps.project_id = p.id
-    WHERE (
-        ps.shared_with_user_id = auth.uid()
-        OR (
-            ps.shared_with_email = (SELECT email FROM auth.users WHERE id = auth.uid())
-            AND ps.shared_with_user_id IS NULL
+        -- Projets partagés avec moi
+        SELECT
+            p.id,
+            p.user_id,
+            p.name,
+            p.description,
+            p.travelers,
+            p.created_at,
+            p.updated_at,
+            TRUE as is_shared,
+            ps.permission
+        FROM projects p
+        INNER JOIN project_shares ps ON ps.project_id = p.id
+        WHERE (
+            ps.shared_with_user_id = auth.uid()
+            OR (
+                ps.shared_with_email = (SELECT email FROM auth.users WHERE id = auth.uid())
+                AND ps.shared_with_user_id IS NULL
+            )
         )
-    )
-
-    ORDER BY created_at DESC;
+    ) AS all_projects
+    ORDER BY all_projects.created_at DESC;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
