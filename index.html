@@ -1568,7 +1568,7 @@
             showApp();
         }
 
-        function showApp() {
+        async function showApp() {
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appContainer').classList.add('show');
             document.getElementById('addBtn').style.display = 'flex';
@@ -1578,7 +1578,8 @@
             document.getElementById('userName').textContent = currentUser.email || 'Utilisateur';
             document.getElementById('userEmail').textContent = currentUser.email || '';
 
-            loadData();
+            // Attendre que les données soient chargées AVANT de render
+            await loadData();
             renderCalendar();
             renderProjects();
         }
