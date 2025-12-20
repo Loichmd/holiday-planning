@@ -140,15 +140,7 @@ async function loadProjects() {
     try {
         const { data, error } = await supabaseClient
             .from('projects')
-            .select(`
-                *,
-                project_shares!project_shares_project_id_fkey (
-                    id,
-                    shared_with_email,
-                    permission,
-                    shared_by_user_id
-                )
-            `)
+            .select('*')
             .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -317,20 +309,10 @@ async function removeProjectShare(shareId) {
  * Vérifier si l'utilisateur peut modifier un projet
  */
 function canEditProject(project) {
-    // Propriétaire = toujours peut modifier
-    if (project.user_id === currentUser.id) {
-        return true;
-    }
-
-    // Vérifier les partages
-    if (project.project_shares && project.project_shares.length > 0) {
-        return project.project_shares.some(share =>
-            share.shared_with_email === currentUser.email &&
-            share.permission === 'write'
-        );
-    }
-
-    return false;
+    // Pour l'instant, seul le propriétaire peut modifier
+    // TODO: Ajouter support des partages
+    if (!currentUser) return false;
+    return project.user_id === currentUser.id;
 }
 
 // ============================================
