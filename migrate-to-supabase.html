@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Migration localStorage → Supabase</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #212529;
+        }
+        p {
+            color: #868e96;
+            margin-bottom: 20px;
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .step h3 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: #495057;
+        }
+        button {
+            width: 100%;
+            padding: 14px 20px;
+            border: none;
+            background: #228be6;
+            color: white;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background: #1c7ed6;
+        }
+        button.secondary {
+            background: #f8f9fa;
+            color: #495057;
+        }
+        button.secondary:hover {
+            background: #e9ecef;
+        }
+        #output {
+            background: #212529;
+            color: #51cf66;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+            display: none;
+        }
+        .success { color: #51cf66; }
+        .error { color: #fa5252; }
+        .info { color: #339af0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Migration localStorage → Supabase</h1>
+        <p>Cet outil migre vos données locales vers Supabase</p>
+
+        <div class="step">
+            <h3>Étape 1 : Vérifier les données localStorage</h3>
+            <button onclick="checkLocalData()">Vérifier localStorage</button>
+        </div>
+
+        <div class="step">
+            <h3>Étape 2 : Se connecter à Supabase</h3>
+            <input type="email" id="email" placeholder="Votre email Supabase" style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; margin-bottom: 10px;">
+            <input type="password" id="password" placeholder="Votre mot de passe" style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; margin-bottom: 10px;">
+            <button onclick="loginSupabase()">Se connecter</button>
+        </div>
+
+        <div class="step">
+            <h3>Étape 3 : Migrer les données</h3>
+            <button onclick="migrateData()">🚀 Migrer vers Supabase</button>
+        </div>
+
+        <div id="output"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script>
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+
+        let localData = null;
+        let currentUser = null;
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            output.style.display = 'block';
+            const span = document.createElement('div');
+            span.className = type;
+            span.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            output.appendChild(span);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function checkLocalData() {
+            log('Recherche des données localStorage...', 'info');
+
+            // Chercher toutes les clés qui commencent par "planningVoyages_"
+            const keys = Object.keys(localStorage).filter(k => k.startsWith('planningVoyages_'));
+
+            if (keys.length === 0) {
+                log('❌ Aucune donnée localStorage trouvée', 'error');
+                log('Vous n\'avez pas de données à migrer', 'info');
+                return;
+            }
+
+            log(`✅ Trouvé ${keys.length} compte(s) localStorage`, 'success');
+
+            keys.forEach(key => {
+                const data = JSON.parse(localStorage.getItem(key));
+                const userId = key.replace('planningVoyages_', '');
+                log(`  - User ID: ${userId}`, 'info');
+                log(`    Projects: ${data.projects?.length || 0}`, 'info');
+                log(`    Activities: ${data.activities?.length || 0}`, 'info');
+            });
+
+            // Prendre le premier pour la migration
+            localData = JSON.parse(localStorage.getItem(keys[0]));
+            log(`\nPrêt à migrer: ${localData.projects?.length || 0} projets, ${localData.activities?.length || 0} activités`, 'success');
+        }
+
+        async function loginSupabase() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                log('❌ Email et mot de passe requis', 'error');
+                return;
+            }
+
+            log('Connexion à Supabase...', 'info');
+
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email,
+                    password
+                });
+
+                if (error) throw error;
+
+                currentUser = data.user;
+                log(`✅ Connecté en tant que: ${currentUser.email}`, 'success');
+
+            } catch (error) {
+                log(`❌ Erreur de connexion: ${error.message}`, 'error');
+            }
+        }
+
+        async function migrateData() {
+            if (!localData) {
+                log('❌ Aucune donnée locale trouvée. Lancez Étape 1 d\'abord.', 'error');
+                return;
+            }
+
+            if (!currentUser) {
+                log('❌ Non connecté à Supabase. Lancez Étape 2 d\'abord.', 'error');
+                return;
+            }
+
+            log('🚀 Début de la migration...', 'info');
+
+            try {
+                // Migrer les projets
+                log(`\nMigration de ${localData.projects.length} projet(s)...`, 'info');
+
+                const projectMapping = {}; // old ID -> new ID
+
+                for (const project of localData.projects) {
+                    log(`  - Création: ${project.name}`, 'info');
+
+                    const { data, error } = await supabaseClient
+                        .from('projects')
+                        .insert({
+                            user_id: currentUser.id,
+                            name: project.name,
+                            description: project.description || '',
+                            travelers: project.travelers || []
+                        })
+                        .select()
+                        .single();
+
+                    if (error) throw error;
+
+                    projectMapping[project.id] = data.id;
+                    log(`    ✅ Créé avec ID: ${data.id}`, 'success');
+                }
+
+                // Migrer les activités
+                log(`\nMigration de ${localData.activities.length} activité(s)...`, 'info');
+
+                for (const activity of localData.activities) {
+                    const newProjectId = projectMapping[activity.projectId];
+
+                    if (!newProjectId) {
+                        log(`    ⚠️  Projet non trouvé pour activité: ${activity.title}`, 'error');
+                        continue;
+                    }
+
+                    log(`  - Création: ${activity.title}`, 'info');
+
+                    const { data, error } = await supabaseClient
+                        .from('activities')
+                        .insert({
+                            project_id: newProjectId,
+                            title: activity.title,
+                            date: activity.date,
+                            time: activity.time || null,
+                            duration: activity.duration || null,
+                            category: activity.category,
+                            travelers: activity.travelers || [],
+                            location: activity.location || '',
+                            url: activity.url || '',
+                            notes: activity.notes || '',
+                            attachments: activity.attachments || null
+                        })
+                        .select()
+                        .single();
+
+                    if (error) throw error;
+
+                    log(`    ✅ Créée avec ID: ${data.id}`, 'success');
+                }
+
+                log('\n🎉 Migration terminée avec succès !', 'success');
+                log('Vous pouvez maintenant vérifier dans Supabase Table Editor', 'info');
+                log('Vos données localStorage restent intactes (vous pouvez les supprimer manuellement)', 'info');
+
+            } catch (error) {
+                log(`\n❌ Erreur lors de la migration: ${error.message}`, 'error');
+                console.error('Détails:', error);
+            }
+        }
+    </script>
+</body>
+</html>
