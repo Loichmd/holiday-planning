@@ -41,3 +41,12 @@ build/
 
 # Archive folder
 OLD/
+
+
+# Security
+SECURITY.md
+README.md
+
+
+#sql
+*.sql

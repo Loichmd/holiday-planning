@@ -1,7 +1,17 @@
 {
   "permissions": {
     "allow": [
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(cp:*)",
+      "Bash(git add:*)",
+      "Bash(git rm:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nPréparation pour déploiement sur GitHub Pages\n\n- Création de index.html pour GitHub Pages\n- Mise à jour du README avec instructions de déploiement\n- Déplacement des anciens fichiers backend/frontend dans OLD/\n- Conservation de planning-with-views.html comme source\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(git commit:*)",
+      "Bash(python3:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(open:*)"
     ]
   }
 }

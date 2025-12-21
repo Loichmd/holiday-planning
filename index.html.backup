@@ -2,17 +2,15 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Planning Vacances - Responsive</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body {
+        body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: #f8f9fa;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            -webkit-overflow-scrolling: touch;
+            height: 100vh;
+            overflow: hidden;
         }
         
         /* Login Screen */
@@ -126,28 +124,24 @@
            ============================ */
         .app-container {
             display: none;
+            height: 100vh;
             background: white;
         }
         .app-container.show {
-            display: block;
+            display: flex;
         }
-
+        
         /* MOBILE: Layout vertical (< 768px) */
         @media (max-width: 767px) {
             .app-container {
-                display: none;
-            }
-            .app-container.show {
-                display: block;
+                flex-direction: column;
             }
         }
-
+        
         /* DESKTOP: Layout horizontal (>= 768px) */
         @media (min-width: 768px) {
-            .app-container.show {
-                display: flex;
+            .app-container {
                 flex-direction: row;
-                height: 100vh;
             }
         }
         
@@ -459,26 +453,16 @@
            MAIN CONTENT (Events) - RESPONSIVE
            ============================ */
         .main-content {
-            flex: 1 1 auto;
+            flex: 1;
             display: flex;
             flex-direction: column;
-            min-height: 0;
+            overflow: hidden;
         }
-
-        /* Mobile: Tout simple, pas de flexbox */
-        @media (max-width: 767px) {
-            .main-content {
-                display: block;
-            }
-        }
-
-        /* Desktop */
+        
+        /* Desktop: Padding et largeur max */
         @media (min-width: 768px) {
             .main-content {
-                overflow: hidden;
                 max-width: none;
-                flex: 1;
-                display: flex;
             }
         }
         
@@ -486,7 +470,6 @@
             padding: 24px;
             background: white;
             border-bottom: 1px solid #e9ecef;
-            flex-shrink: 0;
         }
         .content-title {
             font-size: 24px;
@@ -501,17 +484,9 @@
         
         /* Events Container */
         .events-container {
+            flex: 1;
+            overflow-y: auto;
             padding: 24px;
-        }
-
-        @media (min-width: 768px) {
-            .events-container {
-                flex: 1 1 auto;
-                overflow-y: auto;
-                overflow-x: hidden;
-                -webkit-overflow-scrolling: touch;
-                min-height: 0;
-            }
         }
         
         /* Desktop: 2 colonnes si beaucoup d'espace */
@@ -1125,36 +1100,22 @@
             padding: 20px 8px;
             font-size: 13px;
         }
-.attachment-size {
-    font-size: 11px;
-    color: #868e96;
-    margin-left: auto;
-    margin-right: 8px;
-}
-
-.collaborator-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    margin-bottom: 8px;
-}
-
-.collaborator-email {
-    font-weight: 600;
-    font-size: 14px;
-    color: #212529;
-}
-
-.collaborator-permission {
-    font-size: 12px;
-    color: #868e96;
-    margin-top: 2px;
-}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<!-- Configuration -->
+<script src="config.js"></script>
+
+<!-- Validation des fichiers -->
+<script src="file-validation.js"></script>
+
+<!-- Intégration Supabase -->
+<script src="app-supabase.js"></script>
+
+<!-- Votre code existant -->
+<script>
+    // ... votre code JavaScript actuel ...
+</script>
 </head>
 <body>
     <!-- Login Screen -->
@@ -1164,85 +1125,21 @@
             <h1 class="login-title">Planning Vacances</h1>
             <p class="login-subtitle">Organisez vos voyages en toute simplicité</p>
             
-            <!-- Formulaire de connexion -->
-        <div id="loginForm">
-            <div class="form-group" style="margin-bottom: 16px;">
-                <label class="form-label">📧 Email</label>
-                <input
-                    type="email"
-                    class="form-input"
-                    id="loginEmail"
-                    placeholder="votre@email.com"
-                    autocomplete="email"
-                >
-            </div>
-
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label class="form-label">🔒 Mot de passe</label>
-                <input
-                    type="password"
-                    class="form-input"
-                    id="loginPassword"
-                    placeholder="••••••••"
-                    autocomplete="current-password"
-                >
-            </div>
-
-            <button class="btn btn-primary" style="width: 100%; margin-bottom: 12px;" onclick="handleLogin()">
-                Se connecter
-            </button>
-
-            <div style="text-align: center; margin-top: 16px;">
-                <p style="font-size: 13px; color: #868e96; margin-bottom: 8px;">
-                    Pas encore de compte ?
-                </p>
-                <button class="btn btn-secondary" onclick="showSignupForm()">
-                    S'inscrire
+            <div class="oauth-buttons">
+                <button class="oauth-btn" onclick="loginWithProvider('google')">
+                    <span>🔵</span>
+                    <span>Continuer avec Google</span>
+                </button>
+                <button class="oauth-btn" onclick="loginWithProvider('microsoft')">
+                    <span>🟦</span>
+                    <span>Continuer avec Microsoft</span>
+                </button>
+                <button class="oauth-btn" onclick="loginWithProvider('apple')">
+                    <span>⚫</span>
+                    <span>Continuer avec Apple</span>
                 </button>
             </div>
-        </div>
-
-        <!-- Formulaire d'inscription (caché par défaut) -->
-        <div id="signupForm" style="display: none;">
-            <div class="form-group" style="margin-bottom: 16px;">
-                <label class="form-label">📧 Email</label>
-                <input
-                    type="email"
-                    class="form-input"
-                    id="signupEmail"
-                    placeholder="votre@email.com"
-                    autocomplete="email"
-                >
-            </div>
-
-            <div class="form-group" style="margin-bottom: 8px;">
-                <label class="form-label">🔒 Mot de passe</label>
-                <input
-                    type="password"
-                    class="form-input"
-                    id="signupPassword"
-                    placeholder="Minimum 6 caractères"
-                    autocomplete="new-password"
-                >
-                <small style="font-size: 11px; color: #868e96; display: block; margin-top: 4px;">
-                    Au moins 6 caractères
-                </small>
-            </div>
-
-            <button class="btn btn-primary" style="width: 100%; margin-bottom: 12px; margin-top: 12px;" onclick="handleSignup()">
-                Créer mon compte
-            </button>
-
-            <div style="text-align: center; margin-top: 16px;">
-                <p style="font-size: 13px; color: #868e96; margin-bottom: 8px;">
-                    Déjà un compte ?
-                </p>
-                <button class="btn btn-secondary" onclick="showLoginForm()">
-                    Se connecter
-                </button>
-            </div>
-        </div>
-
+            
             <div class="divider">ou</div>
             
             <div class="demo-section">
@@ -1265,7 +1162,7 @@
                             <div class="user-email" id="userEmail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="2842474046684d50494558444d064b4745">[email&#160;protected]</a></div>
                         </div>
                     </div>
-                    <button class="logout-btn" onclick="handleLogout()">Déconnexion</button>
+                    <button class="logout-btn" onclick="logout()">Déconnexion</button>
                 </div>
                 
                 <div class="project-selector">
@@ -1274,23 +1171,6 @@
                         <span style="margin-left: auto;">▼</span>
                     </button>
                     <div class="project-dropdown" id="projectDropdown"></div>
-                </div>
-
-                <!-- Bouton de partage visible -->
-                <div id="shareButtonContainer" style="padding: 12px 20px; display: none;">
-                    <button class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="openShareModalForCurrentProject()">
-                        <span>👥</span>
-                        <span>Partager ce projet</span>
-                    </button>
-                </div>
-
-                <!-- Liste des collaborateurs -->
-                <div id="collaboratorsSection" style="padding: 0 20px 12px 20px; display: none;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <h4 style="font-size: 12px; font-weight: 600; color: #868e96; text-transform: uppercase; margin: 0;">Collaborateurs</h4>
-                        <button onclick="openShareModalForCurrentProject()" style="background: none; border: none; color: #339af0; font-size: 11px; cursor: pointer; padding: 4px 8px; font-weight: 600;">Voir tout</button>
-                    </div>
-                    <div id="collaboratorsMiniList"></div>
                 </div>
             </div>
             
@@ -1437,7 +1317,7 @@
                     <div class="form-group">
                         <label class="form-label">Pièces jointes</label>
                         <div class="file-upload" onclick="document.getElementById('fileInput').click()">
-                            <input type="file" id="fileInput" multiple onchange="handleFilesWithValidation(this.files)">
+                            <input type="file" id="fileInput" multiple onchange="handleFiles(this.files)">
                             <div>📎 Cliquez pour ajouter des fichiers</div>
                         </div>
                         <div class="attachment-list" id="attachmentList"></div>
@@ -1485,376 +1365,12 @@
         </div>
     </div>
 
-    
-    <!-- Share Modal -->
-    <div class="modal" id="shareModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Partager le projet</h3>
-                <button class="modal-close" onclick="closeShareModal()">✕</button>
-            </div>
-            <div class="modal-body">
-                <div id="shareForm">
-                    <div class="form-group">
-                        <label class="form-label">Email du collaborateur</label>
-                        <input type="email" class="form-input" id="shareEmail" placeholder="email@exemple.com">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Permission</label>
-                        <select class="form-select" id="sharePermission">
-                            <option value="read">Lecture seule</option>
-                            <option value="write">Peut modifier</option>
-                        </select>
-                    </div>
-
-                    <button class="btn btn-primary" style="width: 100%;" onclick="handleShareProject()">Partager</button>
-                </div>
-
-                <div class="collaborators-list" id="collaboratorsList" style="margin-top: 24px;"></div>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- Supabase Client -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <!-- Configuration -->
-    <script src="config.js"></script>
-
-    <!-- Validation des fichiers -->
-    <script src="file-validation.js"></script>
-
-    <!-- Intégration Supabase -->
-    <script src="app-supabase.js?v=13"></script>
-
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
-    <script>
-        // ============================================
-        // GESTION DE L'AUTHENTIFICATION
-        // ============================================
-
-        function showLoginForm() {
-            document.getElementById('loginForm').style.display = 'block';
-            document.getElementById('signupForm').style.display = 'none';
-        }
-
-        function showSignupForm() {
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('signupForm').style.display = 'block';
-        }
-
-        async function handleLogin() {
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value;
-
-            if (!email || !password) {
-                alert('Veuillez remplir tous les champs');
-                return;
-            }
-
-            const result = await login(email, password);
-
-            if (result.success) {
-                currentUser = result.user;
-                showApp();
-            } else {
-                alert('Erreur de connexion: ' + result.error);
-            }
-        }
-
-        async function handleSignup() {
-            const email = document.getElementById('signupEmail').value.trim();
-            const password = document.getElementById('signupPassword').value;
-
-            if (!email || !password) {
-                alert('Veuillez remplir tous les champs');
-                return;
-            }
-
-            if (password.length < 6) {
-                alert('Le mot de passe doit contenir au moins 6 caractères');
-                return;
-            }
-
-            const result = await signup(email, password);
-
-            if (result.success) {
-                alert('Compte créé avec succès ! Vous pouvez maintenant vous connecter.');
-                showLoginForm();
-                document.getElementById('loginEmail').value = email;
-            } else {
-                alert('Erreur lors de la création du compte: ' + result.error);
-            }
-        }
-
-        async function handleLogout() {
-            if (!confirm('Voulez-vous vraiment vous déconnecter ?')) {
-                return;
-            }
-
-            const result = await logout();
-
-            if (result.success) {
-                document.getElementById('loginScreen').style.display = 'flex';
-                document.getElementById('appContainer').classList.remove('show');
-                document.getElementById('addBtn').style.display = 'none';
-            }
-        }
-
-        function loginDemo() {
-            currentUser = {
-                id: 'demo',
-                email: 'demo@planningvacances.com',
-                user_metadata: { name: 'Utilisateur Démo' }
-            };
-            showApp();
-        }
-
-        async function showApp() {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('appContainer').classList.add('show');
-            document.getElementById('addBtn').style.display = 'flex';
-
-            const initials = currentUser.email ? currentUser.email.substring(0, 2).toUpperCase() : 'U';
-            document.getElementById('userAvatar').textContent = initials;
-            document.getElementById('userName').textContent = currentUser.email || 'Utilisateur';
-            document.getElementById('userEmail').textContent = currentUser.email || '';
-
-            // Attendre que les données soient chargées AVANT de render
-            await loadData();
-            renderCalendar();
-            renderProjects();
-            renderEvents();
-        }
-
-        // ============================================
-        // PARTAGE DE PROJETS
-        // ============================================
-
-        let currentSharingProjectId = null;
-
-        async function openShareModal(projectId) {
-            currentSharingProjectId = projectId;
-            document.getElementById('shareEmail').value = '';
-            document.getElementById('sharePermission').value = 'read';
-            document.getElementById('shareModal').classList.add('show');
-
-            // Afficher/cacher le formulaire d'ajout selon les permissions
-            const canShare = isProjectOwner(projectId) || await canEditProject(projectId);
-            const shareForm = document.getElementById('shareForm');
-            if (shareForm) {
-                shareForm.style.display = canShare ? 'block' : 'none';
-            }
-
-            await loadCollaborators(projectId);
-        }
-
-        function closeShareModal() {
-            document.getElementById('shareModal').classList.remove('show');
-            currentSharingProjectId = null;
-        }
-
-        async function handleShareProject() {
-            const email = document.getElementById('shareEmail').value.trim();
-            const permission = document.getElementById('sharePermission').value;
-
-            if (!email) {
-                alert('Veuillez entrer un email');
-                return;
-            }
-
-            const result = await shareProject(currentSharingProjectId, email, permission);
-
-            if (result.success) {
-                alert(`Projet partagé avec ${email} !`);
-                document.getElementById('shareEmail').value = '';
-                await loadCollaborators(currentSharingProjectId);
-            } else {
-                alert('Erreur: ' + result.error);
-            }
-        }
-
-        async function loadCollaborators(projectId) {
-            const result = await loadProjectShares(projectId);
-            const isOwner = isProjectOwner(projectId);
-            const project = projects.find(p => p.id === projectId);
-
-            if (result.success) {
-                const list = document.getElementById('collaboratorsList');
-                const canManageCollaborators = isOwner || await canEditProject(projectId);
-
-                // Afficher le propriétaire
-                let ownerHtml = '';
-                if (project) {
-                    // Trouver l'email du propriétaire (pour l'instant on utilise currentUser si c'est le propriétaire)
-                    const ownerEmail = isOwner ? currentUser.email : 'Propriétaire';
-                    ownerHtml = `
-                        <div class="collaborator-item" style="background: #e7f5ff; border: 1px solid #339af0;">
-                            <div>
-                                <div class="collaborator-email">
-                                    ${ownerEmail}
-                                    ${isOwner ? '<span style="color: #51cf66; font-size: 11px; margin-left: 6px;">(Vous)</span>' : ''}
-                                </div>
-                                <div class="collaborator-permission">
-                                    👑 Propriétaire
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }
-
-                if (result.shares.length === 0) {
-                    list.innerHTML = '<h4 style="font-size: 13px; font-weight: 600; color: #495057; margin-bottom: 12px;">Membres du projet</h4>' +
-                        ownerHtml +
-                        '<p style="text-align: center; color: #868e96; font-size: 13px; margin-top: 12px;">Aucun collaborateur</p>';
-                    return;
-                }
-
-                list.innerHTML = '<h4 style="font-size: 13px; font-weight: 600; color: #495057; margin-bottom: 12px;">Membres du projet</h4>' +
-                    ownerHtml +
-                    '<div style="margin-top: 12px;"></div>' +
-                    result.shares.map(share => {
-                        const isCurrentUser = share.shared_with_email === currentUser.email || share.shared_with_user_id === currentUser.id;
-                        const canRemove = canManageCollaborators || isCurrentUser;
-                        const buttonText = isCurrentUser ? 'Me retirer' : '✕';
-
-                        return `
-                            <div class="collaborator-item">
-                                <div>
-                                    <div class="collaborator-email">
-                                        ${share.shared_with_email}
-                                        ${isCurrentUser ? '<span style="color: #51cf66; font-size: 11px; margin-left: 6px;">(Vous)</span>' : ''}
-                                    </div>
-                                    <div class="collaborator-permission">
-                                        ${share.permission === 'write' ? '✏️ Peut modifier' : '👁️ Lecture seule'}
-                                    </div>
-                                </div>
-                                ${canRemove ? `<button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="handleRemoveShare('${share.id}', ${isCurrentUser})">${buttonText}</button>` : ''}
-                            </div>
-                        `;
-                    }).join('');
-            }
-        }
-
-        async function handleRemoveShare(shareId, isCurrentUser = false) {
-            const message = isCurrentUser ? 'Voulez-vous vous retirer de ce projet ?' : 'Retirer ce collaborateur ?';
-
-            if (!confirm(message)) {
-                return;
-            }
-
-            const result = await removeProjectShare(shareId);
-
-            if (result.success) {
-                if (isCurrentUser) {
-                    // Si l'utilisateur se retire, fermer le modal et recharger les projets
-                    closeShareModal();
-                    await loadData();
-
-                    // Si c'était le projet actuel, sélectionner un autre projet
-                    if (currentProject === currentSharingProjectId) {
-                        currentProject = projects[0]?.id;
-                    }
-
-                    renderProjects();
-                    renderCalendar();
-                } else {
-                    await loadCollaborators(currentSharingProjectId);
-                }
-            } else {
-                alert('Erreur: ' + result.error);
-            }
-        }
-
-        // ============================================
-        // AFFICHAGE DES COLLABORATEURS EN SIDEBAR
-        // ============================================
-
-        async function loadAndDisplayCollaborators(projectId) {
-            const result = await loadProjectShares(projectId);
-            const isOwner = isProjectOwner(projectId);
-            const project = projects.find(p => p.id === projectId);
-
-            if (result.success) {
-                const list = document.getElementById('collaboratorsMiniList');
-                const totalCollaborators = result.shares.length;
-                const maxDisplay = 3; // Afficher max 3 collaborateurs
-
-                // Ajouter le propriétaire
-                let html = '';
-                let count = 0;
-
-                if (project && isOwner) {
-                    html += `
-                        <div style="display: flex; align-items: center; gap: 8px; padding: 6px; background: #f8f9fa; border-radius: 6px; margin-bottom: 6px;">
-                            <div style="width: 28px; height: 28px; border-radius: 50%; background: #339af0; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 600;">
-                                ${currentUser.email.substring(0, 2).toUpperCase()}
-                            </div>
-                            <div style="flex: 1; min-width: 0;">
-                                <div style="font-size: 12px; font-weight: 600; color: #212529; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Vous</div>
-                                <div style="font-size: 10px; color: #868e96;">Propriétaire</div>
-                            </div>
-                        </div>
-                    `;
-                    count++;
-                }
-
-                // Ajouter les collaborateurs (max 3)
-                result.shares.slice(0, maxDisplay).forEach(share => {
-                    const initials = share.shared_with_email.substring(0, 2).toUpperCase();
-                    const isCurrentUser = share.shared_with_email === currentUser.email || share.shared_with_user_id === currentUser.id;
-
-                    html += `
-                        <div style="display: flex; align-items: center; gap: 8px; padding: 6px; background: #f8f9fa; border-radius: 6px; margin-bottom: 6px;">
-                            <div style="width: 28px; height: 28px; border-radius: 50%; background: #868e96; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 600;">
-                                ${initials}
-                            </div>
-                            <div style="flex: 1; min-width: 0;">
-                                <div style="font-size: 12px; font-weight: 600; color: #212529; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                    ${isCurrentUser ? 'Vous' : share.shared_with_email.split('@')[0]}
-                                </div>
-                                <div style="font-size: 10px; color: #868e96;">
-                                    ${share.permission === 'write' ? 'Peut modifier' : 'Lecture seule'}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    count++;
-                });
-
-                // Afficher "et X autres" si plus de collaborateurs
-                if (totalCollaborators > maxDisplay) {
-                    const remaining = totalCollaborators - maxDisplay;
-                    html += `
-                        <div style="text-align: center; padding: 8px; font-size: 11px; color: #868e96;">
-                            et ${remaining} autre${remaining > 1 ? 's' : ''}
-                        </div>
-                    `;
-                }
-
-                if (html === '') {
-                    list.innerHTML = '<p style="font-size: 12px; color: #868e96; text-align: center; padding: 8px;">Aucun collaborateur</p>';
-                } else {
-                    list.innerHTML = html;
-                }
-            }
-        }
-
-        function openShareModalForCurrentProject() {
-            if (currentProject) {
-                openShareModal(currentProject);
-            }
-        }
-
-        // ============================================
-        // VARIABLES GLOBALES (suite)
-        // ============================================
-
-        // Variables déjà déclarées dans app-supabase.js :
-        // currentUser, projects, activities, currentProject
-
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+        // Variables globales
+        let currentUser = null;
+        let projects = [];
+        let currentProject = null;
+        let activities = [];
         let currentDate = new Date();
         let selectedDate = new Date();
         let editingActivity = null;
@@ -1918,43 +1434,49 @@
             }
         }
 
+        function showApp() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appContainer').classList.add('show');
+            document.getElementById('addBtn').style.display = 'flex';
+            
+            // Update user info
+            const initials = currentUser.name.split(' ').map(n => n[0]).join('');
+            document.getElementById('userAvatar').textContent = initials;
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userEmail').textContent = currentUser.email;
+            
+            loadData();
+            renderCalendar();
+            renderProjects();
+        }
+
         function getStorageKey() {
             return `planningVoyages_${currentUser.id}`;
         }
 
-        async function loadData() {
-            // Charger les projets depuis Supabase
-            const result = await loadProjects();
-
-            if (result.success) {
-                projects = result.projects;
-
-                // Si aucun projet, en créer un par défaut
-                if (projects.length === 0) {
-                    await createProject('Mon premier voyage', '', []);
-                    await loadProjects();
-                    projects = (await loadProjects()).projects;
-                }
-
-                currentProject = projects[0].id;
-
-                // Charger les activités du projet actuel
-                if (currentProject) {
-                    const activitiesResult = await loadActivities(currentProject);
-                    console.log('📊 Activités chargées:', activitiesResult);
-                    if (activitiesResult.success) {
-                        activities = activitiesResult.activities;
-                        console.log('✅ Nombre d\'activités:', activities.length);
-                    } else {
-                        console.error('❌ Erreur chargement activités:', activitiesResult.error);
-                    }
-                }
+        function loadData() {
+            const data = localStorage.getItem(getStorageKey());
+            if (data) {
+                const parsed = JSON.parse(data);
+                projects = parsed.projects || [];
+                activities = parsed.activities || [];
             }
+            
+            if (projects.length === 0) {
+                projects.push({
+                    id: Date.now().toString(),
+                    name: 'Mon premier voyage',
+                    description: '',
+                    travelers: []
+                });
+                saveData();
+            }
+            
+            currentProject = projects[0].id;
         }
 
         function saveData() {
-            // Plus besoin avec Supabase - les données sont sauvegardées automatiquement
-            console.log('saveData() appelé - données sauvegardées via Supabase');
+            localStorage.setItem(getStorageKey(), JSON.stringify({ projects, activities }));
         }
 
         // Calendar functions
@@ -2106,22 +1628,12 @@
         }
 
         // Projects
-        async function renderProjects() {
+        function renderProjects() {
             const dropdown = document.getElementById('projectDropdown');
             const currentProj = projects.find(p => p.id === currentProject);
-
+            
             document.getElementById('currentProjectName').textContent = currentProj ? currentProj.name : 'Mes Projets';
-
-            // Afficher/cacher le bouton de partage et les collaborateurs
-            if (currentProject) {
-                document.getElementById('shareButtonContainer').style.display = 'block';
-                document.getElementById('collaboratorsSection').style.display = 'block';
-                await loadAndDisplayCollaborators(currentProject);
-            } else {
-                document.getElementById('shareButtonContainer').style.display = 'none';
-                document.getElementById('collaboratorsSection').style.display = 'none';
-            }
-
+            
             dropdown.innerHTML = projects.map(p => {
                 const count = activities.filter(a => a.projectId === p.id).length;
                 return `
@@ -2131,8 +1643,8 @@
                             <div class="project-item-count">${count} activité${count > 1 ? 's' : ''}</div>
                         </div>
                         <div class="project-actions" onclick="event.stopPropagation()">
-                            <button class="project-action-btn" onclick="editProject('${p.id}')" title="Modifier">✏️</button>
-                            ${projects.length > 1 ? `<button class="project-action-btn delete" onclick="deleteProjectFunc('${p.id}')" title="Supprimer">🗑️</button>` : ''}
+                            <button class="project-action-btn" onclick="editProject('${p.id}')">✏️</button>
+                            ${projects.length > 1 ? `<button class="project-action-btn delete" onclick="deleteProject('${p.id}')">🗑️</button>` : ''}
                         </div>
                     </div>
                 `;
@@ -2148,18 +1660,10 @@
             document.getElementById('projectDropdown').classList.toggle('show');
         }
 
-        async function selectProject(id) {
+        function selectProject(id) {
             currentProject = id;
             toggleProjectDropdown();
             renderProjects();
-
-            // Charger les activités du projet sélectionné
-            if (id) {
-                await loadActivities(id);
-            } else {
-                activities = [];
-            }
-
             renderCalendar();
         }
 
@@ -2186,62 +1690,50 @@
             document.getElementById('projectModal').classList.remove('show');
         }
 
-        async function saveProject() {
+        function saveProject() {
             const name = document.getElementById('projectName').value.trim();
             if (!name) return alert('Le nom est obligatoire');
-
+            
             const travelers = document.getElementById('projectTravelers').value
                 .split(',')
                 .map(t => t.trim())
                 .filter(t => t);
-
-            const projectData = {
-                name,
-                description: document.getElementById('projectDescription').value.trim(),
-                travelers
-            };
-
-            let result;
-
+            
             if (editingProjectId) {
-                // MISE À JOUR via Supabase
-                result = await updateProject(editingProjectId, projectData);
+                const project = projects.find(p => p.id === editingProjectId);
+                project.name = name;
+                project.description = document.getElementById('projectDescription').value.trim();
+                project.travelers = travelers;
             } else {
-                // CRÉATION via Supabase
-                result = await createProject(name, projectData.description, travelers);
+                projects.push({
+                    id: Date.now().toString(),
+                    name,
+                    description: document.getElementById('projectDescription').value.trim(),
+                    travelers
+                });
             }
-
-            if (result.success) {
-                await loadData();
-                renderProjects();
-                closeProjectModal();
-            } else {
-                alert('Erreur lors de la sauvegarde: ' + result.error);
-            }
+            
+            saveData();
+            renderProjects();
+            closeProjectModal();
         }
 
-        async function deleteProjectFunc(id) {
+        function deleteProject(id) {
             if (projects.length === 1) {
                 alert('Vous ne pouvez pas supprimer votre dernier projet');
                 return;
             }
-
+            
             const project = projects.find(p => p.id === id);
             if (confirm(`Supprimer "${project.name}" et toutes ses activités ?`)) {
-                const result = await deleteProject(id);
-
-                if (result.success) {
-                    if (currentProject === id) {
-                        await loadData();
-                        currentProject = projects[0]?.id;
-                    } else {
-                        await loadData();
-                    }
-                    renderProjects();
-                    renderCalendar();
-                } else {
-                    alert('Erreur lors de la suppression: ' + result.error);
+                projects = projects.filter(p => p.id !== id);
+                activities = activities.filter(a => a.projectId !== id);
+                if (currentProject === id) {
+                    currentProject = projects[0].id;
                 }
+                saveData();
+                renderProjects();
+                renderCalendar();
             }
         }
 
@@ -2280,7 +1772,7 @@
             document.getElementById('activityNotes').value = editingActivity.notes || '';
             
             selectCategory(editingActivity.category);
-            renderAttachmentsEnhanced();
+            renderAttachments();
             
             document.getElementById('deleteBtn').style.display = 'block';
             document.getElementById('activityModal').classList.add('show');
@@ -2304,13 +1796,13 @@
                         data: e.target.result,
                         type: file.type
                     });
-                    renderAttachmentsEnhanced();
+                    renderAttachments();
                 };
                 reader.readAsDataURL(file);
             });
         }
 
-        function renderAttachments_OLD() {
+        function renderAttachments() {
             const list = document.getElementById('attachmentList');
             list.innerHTML = currentAttachments.map((att, idx) => `
                 <div class="attachment-item">
@@ -2323,77 +1815,65 @@
 
         function removeAttachment(index) {
             currentAttachments.splice(index, 1);
-            renderAttachmentsEnhanced();
+            renderAttachments();
         }
 
-        async function saveActivity() {
+        function saveActivity() {
             const title = document.getElementById('activityTitle').value.trim();
             const date = document.getElementById('activityDate').value;
-
+            
             if (!title || !date) {
                 alert('Le titre et la date sont obligatoires');
                 return;
             }
-
+            
             const category = document.querySelector('.category-btn.active').dataset.category;
             const travelers = document.getElementById('activityTravelers').value
                 .split(',')
                 .map(t => t.trim())
                 .filter(t => t);
-
+            
             const activityData = {
-                project_id: currentProject,
+                id: editingActivity?.id || Date.now().toString(),
+                projectId: currentProject,
                 title,
                 date,
-                time: document.getElementById('activityTime').value || null,
+                time: document.getElementById('activityTime').value,
                 duration: parseFloat(document.getElementById('activityDuration').value) || 1,
                 category,
                 travelers,
                 location: document.getElementById('activityLocation').value.trim(),
                 url: document.getElementById('activityUrl').value.trim(),
                 notes: document.getElementById('activityNotes').value.trim(),
-                attachments: currentAttachments.length > 0 ? currentAttachments : null
+                attachments: currentAttachments
             };
-
-            let result;
-
+            
             if (editingActivity) {
-                // MISE À JOUR via Supabase
-                result = await updateActivity(editingActivity.id, activityData);
+                const index = activities.findIndex(a => a.id === editingActivity.id);
+                activities[index] = activityData;
             } else {
-                // CRÉATION via Supabase
-                result = await createActivity(activityData);
+                activities.push(activityData);
             }
+            
+            saveData();
+            renderCalendar();
+            // Refresh planning view if active
+            if (currentView === 'planning') {
+                renderPlanningView();
+            }
+            closeActivityModal();
+        }
 
-            if (result.success) {
-                // Recharger les activités depuis Supabase
-                await loadData();
+        function deleteCurrentActivity() {
+            if (confirm('Supprimer cette activité ?')) {
+                activities = activities.filter(a => a.id !== editingActivity.id);
+                saveData();
                 renderCalendar();
-
                 // Refresh planning view if active
                 if (currentView === 'planning') {
                     renderPlanningView();
                 }
                 closeActivityModal();
-            } else {
-                alert('Erreur lors de la sauvegarde: ' + result.error);
-            }
-        }
-
-        async function deleteCurrentActivity() {
-            if (confirm('Supprimer cette activité ?')) {
-                const result = await deleteActivity(editingActivity.id);
-
-                if (result.success) {
-                    await loadData();
-                    renderCalendar();
-                    if (currentView === 'planning') {
-                        renderPlanningView();
-                    }
-                    closeActivityModal();
-                } else {
-                    alert('Erreur lors de la suppression: ' + result.error);
-                }
             }
         }
 
@@ -2653,76 +2133,8 @@
             `;
         }
         
-        
-        function renderAttachmentsEnhanced() {
-            const list = document.getElementById('attachmentList');
-            list.innerHTML = currentAttachments.map((att, idx) => {
-                const icon = att.type && att.type.startsWith('image/') ? '🖼️' : (att.type === 'application/pdf' ? '📄' : '📎');
-                const size = att.size ? formatFileSize(att.size) : '';
-
-                return `
-                    <div class="attachment-item">
-                        <span class="attachment-icon">${icon}</span>
-                        <span class="attachment-name">${att.name}</span>
-                        ${size ? `<span class="attachment-size">${size}</span>` : ''}
-                        <button class="attachment-remove" onclick="removeAttachment(${idx})">✕</button>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function handleFilesWithValidation(files) {
-            const validation = validateFiles(files);
-
-            if (!validation.valid) {
-                alert('❌ Erreurs de validation :\n\n' + validation.errors.join('\n\n'));
-                document.getElementById('fileInput').value = '';
-                return;
-            }
-
-            validation.validFiles.forEach(file => {
-                const reader = new FileReader();
-
-                reader.onload = (e) => {
-                    currentAttachments.push({
-                        name: file.name,
-                        data: e.target.result,
-                        type: file.type,
-                        size: file.size,
-                        file: file
-                    });
-                    renderAttachmentsEnhanced();
-                };
-
-                reader.readAsDataURL(file);
-            });
-
-            document.getElementById('fileInput').value = '';
-
-            if (validation.validFiles.length > 0) {
-                console.log(`✅ ${validation.validFiles.length} fichier(s) ajouté(s)`);
-            }
-        }
-
-
-        // ============================================
-        // INITIALISATION AU CHARGEMENT
-        // ============================================
-
-        async function initApp() {
-            const result = await checkSession();
-
-            if (result.success) {
-                currentUser = result.user;
-                showApp();
-            } else {
-                // Afficher l'écran de login
-                document.getElementById('loginScreen').style.display = 'flex';
-            }
-        }
-
-        // Démarrer l'app quand la page est chargée
-        document.addEventListener('DOMContentLoaded', initApp);
+        // Init
+        checkAuth();
     </script>
 </body>
 </html>
