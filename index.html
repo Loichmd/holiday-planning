@@ -2585,13 +2585,8 @@
                 // Hide content header (tabs will be in planning header)
                 if (contentHeader) contentHeader.style.display = 'none';
 
-                // Load activities before rendering
-                if (currentProject) {
-                    const result = await loadActivities(currentProject);
-                    console.log('loadActivities result:', result);
-                    console.log('activities after load:', activities);
-                }
-                renderPlanningView();
+                // Render planning view (will load activities itself)
+                await renderPlanningView();
             }
         }
         
@@ -2603,13 +2598,13 @@
         }
         
         
-        function renderPlanningView() {
+        async function renderPlanningView() {
             console.log('renderPlanningView called');
             console.log('currentProject:', currentProject);
-            console.log('activities:', activities);
 
-            // Get all activities for current project sorted by date
-            const projectActivities = activities.filter(a => a.projectId === currentProject);
+            // Load activities fresh
+            const result = await loadActivities(currentProject);
+            const projectActivities = result.success ? result.activities : [];
             console.log('projectActivities:', projectActivities);
 
             if (projectActivities.length === 0) {
