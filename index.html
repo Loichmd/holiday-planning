@@ -988,12 +988,25 @@
             text-transform: uppercase;
             letter-spacing: 0.8px;
             margin-bottom: 6px;
+            padding: 4px 6px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        .day-number:hover, .day-number:focus {
+            background: rgba(34, 139, 230, 0.1);
+            outline: none;
         }
         .day-date {
             font-size: 18px;
             font-weight: 700;
+            padding: 4px 6px;
+            border-radius: 4px;
+            transition: background 0.2s;
             color: #212529;
             margin-bottom: 6px;
+        }
+        .day-date:hover {
+            background: rgba(33, 37, 41, 0.05);
         }
         .day-location {
             font-size: 13px;
@@ -1001,6 +1014,13 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            padding: 4px 6px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        .day-location:hover, .day-location:focus {
+            background: rgba(134, 142, 150, 0.1);
+            outline: none;
         }
 
         /* Liste de cartes */
@@ -2631,7 +2651,9 @@
             // Sort dates
             const sortedDates = Object.keys(activitiesByDate).sort();
 
-            // Load saved locations
+            // Load saved customizations
+            const savedLabels = JSON.parse(localStorage.getItem(`${getStorageKey()}_dayLabels`) || '{}');
+            const savedLocations = JSON.parse(localStorage.getItem(`${getStorageKey()}_dayLocations`) || '{}');
             const savedRegions = JSON.parse(localStorage.getItem(`${getStorageKey()}_regions`) || '{}');
 
             // Generate columns for each day
@@ -2645,9 +2667,12 @@
                 const dayNames = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
 
                 const formattedDate = `${dayNames[date.getDay()]} ${date.getDate()} ${monthNames[date.getMonth()]}`;
-                const location = savedRegions[dateKey] || '';
 
-                // Determine location from activities if not saved
+                // Use saved label or default
+                const dayLabel = savedLabels[dateKey] || `Jour ${dayNumber}`;
+
+                // Use saved location or auto-detect
+                const location = savedLocations[dateKey] || savedRegions[dateKey] || '';
                 const autoLocation = location || (dayActivities[0]?.location ? dayActivities[0].location.split(',')[0] : '');
 
                 const cardsHTML = dayActivities.map(activity => renderActivityCardTrello(activity)).join('');
@@ -2655,9 +2680,9 @@
                 return `
                     <div class="day-column-trello" data-date="${dateKey}">
                         <div class="day-column-header">
-                            <div class="day-number">Jour ${dayNumber}</div>
-                            <div class="day-date">${formattedDate}</div>
-                            ${autoLocation ? `<div class="day-location">📍 ${autoLocation}</div>` : ''}
+                            <div class="day-number" contenteditable="true" onclick="this.focus()" onblur="saveDayLabel('${dateKey}', this.textContent)" title="Cliquez pour modifier">${dayLabel}</div>
+                            <div class="day-date" onclick="editDayDate('${dateKey}', '${formattedDate}')" style="cursor: pointer;" title="Cliquez pour modifier la date">${formattedDate}</div>
+                            <div class="day-location" contenteditable="true" onclick="this.focus()" onblur="saveDayLocation('${dateKey}', this.textContent.replace('📍 ', ''))" title="Cliquez pour modifier">📍 ${autoLocation || 'Ajouter un lieu'}</div>
                         </div>
                         <div class="day-cards-list">
                             ${cardsHTML}
@@ -2706,6 +2731,57 @@
             const day = d.getDay();
             const diff = d.getDate() - day + (day === 0 ? -6 : 1);
             return new Date(d.setDate(diff));
+        }
+
+        // Save custom day label (ex: "Jour de départ" instead of "Jour 1")
+        function saveDayLabel(dateKey, label) {
+            const savedLabels = JSON.parse(localStorage.getItem(`${getStorageKey()}_dayLabels`) || '{}');
+            savedLabels[dateKey] = label.trim();
+            localStorage.setItem(`${getStorageKey()}_dayLabels`, JSON.stringify(savedLabels));
+        }
+
+        // Edit day date with a prompt
+        function editDayDate(dateKey, currentDate) {
+            const newDate = prompt('Modifier la date (format: jj/mm/aaaa):', currentDate);
+            if (newDate && newDate.trim()) {
+                // Parse the date
+                const parts = newDate.trim().split(/[\/\-\.]/);
+                if (parts.length === 3) {
+                    const day = parseInt(parts[0]);
+                    const month = parseInt(parts[1]) - 1;
+                    const year = parseInt(parts[2]);
+                    const parsedDate = new Date(year, month, day);
+
+                    if (!isNaN(parsedDate.getTime())) {
+                        const newDateKey = parsedDate.toISOString().split('T')[0];
+
+                        // TODO: Move all activities from old date to new date
+                        // For now, just save the mapping
+                        const savedDates = JSON.parse(localStorage.getItem(`${getStorageKey()}_dayDates`) || '{}');
+                        savedDates[dateKey] = newDateKey;
+                        localStorage.setItem(`${getStorageKey()}_dayDates`, JSON.stringify(savedDates));
+
+                        // Re-render
+                        renderPlanningView();
+                    } else {
+                        alert('Date invalide. Utilisez le format jj/mm/aaaa');
+                    }
+                } else {
+                    alert('Format invalide. Utilisez le format jj/mm/aaaa');
+                }
+            }
+        }
+
+        // Save day location
+        function saveDayLocation(dateKey, location) {
+            const savedLocations = JSON.parse(localStorage.getItem(`${getStorageKey()}_dayLocations`) || '{}');
+            const loc = location.trim();
+            if (loc && loc !== 'Ajouter un lieu') {
+                savedLocations[dateKey] = loc;
+            } else {
+                delete savedLocations[dateKey];
+            }
+            localStorage.setItem(`${getStorageKey()}_dayLocations`, JSON.stringify(savedLocations));
         }
 
         function saveDayRegion(dayKey, value) {
