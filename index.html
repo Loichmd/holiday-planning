@@ -2587,7 +2587,9 @@
 
                 // Load activities before rendering
                 if (currentProject) {
-                    await loadActivities(currentProject);
+                    const result = await loadActivities(currentProject);
+                    console.log('loadActivities result:', result);
+                    console.log('activities after load:', activities);
                 }
                 renderPlanningView();
             }
