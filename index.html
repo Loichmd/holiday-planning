@@ -2550,7 +2550,7 @@
         let currentView = 'timeline';
         let currentDisplayYear = new Date().getFullYear();
         
-        function switchView(view) {
+        async function switchView(view) {
             currentView = view;
 
             // Update tabs
@@ -2584,6 +2584,11 @@
                 if (sidebar) sidebar.style.display = 'none';
                 // Hide content header (tabs will be in planning header)
                 if (contentHeader) contentHeader.style.display = 'none';
+
+                // Load activities before rendering
+                if (currentProject) {
+                    await loadActivities(currentProject);
+                }
                 renderPlanningView();
             }
         }
