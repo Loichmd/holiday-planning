@@ -2597,8 +2597,13 @@
         
         
         function renderPlanningView() {
+            console.log('renderPlanningView called');
+            console.log('currentProject:', currentProject);
+            console.log('activities:', activities);
+
             // Get all activities for current project sorted by date
             const projectActivities = activities.filter(a => a.projectId === currentProject);
+            console.log('projectActivities:', projectActivities);
 
             if (projectActivities.length === 0) {
                 document.getElementById('planningBoard').innerHTML = `
