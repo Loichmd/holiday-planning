@@ -919,6 +919,7 @@
         }
         .project-selector-planning {
             flex-shrink: 0;
+            position: relative;
         }
         .planning-main-title {
             font-size: 22px;
@@ -1517,10 +1518,11 @@
                             </button>
                         </div>
                         <div class="project-selector-planning">
-                            <button class="project-btn" onclick="toggleProjectDropdown()">
+                            <button class="project-btn" onclick="toggleProjectDropdownPlanning()">
                                 <span id="currentProjectNamePlanning">Mes Projets</span>
-                                <span style="margin-left: 8px;">▼</span>
+                                <span style="margin-left: auto;">▼</span>
                             </button>
+                            <div class="project-dropdown" id="projectDropdownPlanning"></div>
                         </div>
                     </div>
                     <h2 class="planning-main-title">Planning du voyage</h2>
@@ -2273,6 +2275,7 @@
         // Projects
         async function renderProjects() {
             const dropdown = document.getElementById('projectDropdown');
+            const dropdownPlanning = document.getElementById('projectDropdownPlanning');
             const currentProj = projects.find(p => p.id === currentProject);
 
             document.getElementById('currentProjectName').textContent = currentProj ? currentProj.name : 'Mes Projets';
@@ -2288,7 +2291,7 @@
                 document.getElementById('collaboratorsSection').style.display = 'none';
             }
 
-            dropdown.innerHTML = projects.map(p => {
+            const dropdownHTML = projects.map(p => {
                 const count = activities.filter(a => a.projectId === p.id).length;
                 return `
                     <div class="project-item ${p.id === currentProject ? 'active' : ''}" onclick="selectProject('${p.id}')">
@@ -2308,15 +2311,27 @@
                     <span>Nouveau voyage</span>
                 </button>
             `;
+
+            // Fill both dropdowns
+            dropdown.innerHTML = dropdownHTML;
+            if (dropdownPlanning) {
+                dropdownPlanning.innerHTML = dropdownHTML;
+            }
         }
 
         function toggleProjectDropdown() {
             document.getElementById('projectDropdown').classList.toggle('show');
         }
 
+        function toggleProjectDropdownPlanning() {
+            document.getElementById('projectDropdownPlanning').classList.toggle('show');
+        }
+
         async function selectProject(id) {
             currentProject = id;
-            toggleProjectDropdown();
+            // Close both dropdowns
+            document.getElementById('projectDropdown').classList.remove('show');
+            document.getElementById('projectDropdownPlanning').classList.remove('show');
             renderProjects();
 
             // Charger les activités du projet sélectionné
@@ -2740,36 +2755,65 @@
             localStorage.setItem(`${getStorageKey()}_dayLabels`, JSON.stringify(savedLabels));
         }
 
-        // Edit day date with a prompt
+        // Edit day date with a calendar input
         function editDayDate(dateKey, currentDate) {
-            const newDate = prompt('Modifier la date (format: jj/mm/aaaa):', currentDate);
-            if (newDate && newDate.trim()) {
-                // Parse the date
-                const parts = newDate.trim().split(/[\/\-\.]/);
-                if (parts.length === 3) {
-                    const day = parseInt(parts[0]);
-                    const month = parseInt(parts[1]) - 1;
-                    const year = parseInt(parts[2]);
-                    const parsedDate = new Date(year, month, day);
+            // Create a temporary input element
+            const input = document.createElement('input');
+            input.type = 'date';
+            input.value = dateKey; // dateKey is already in YYYY-MM-DD format
+            input.style.position = 'fixed';
+            input.style.top = '50%';
+            input.style.left = '50%';
+            input.style.transform = 'translate(-50%, -50%)';
+            input.style.zIndex = '10000';
+            input.style.fontSize = '16px';
+            input.style.padding = '12px';
+            input.style.border = '2px solid #228be6';
+            input.style.borderRadius = '8px';
+            input.style.boxShadow = '0 4px 20px rgba(0,0,0,0.2)';
 
-                    if (!isNaN(parsedDate.getTime())) {
-                        const newDateKey = parsedDate.toISOString().split('T')[0];
+            // Create overlay
+            const overlay = document.createElement('div');
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
+            overlay.style.zIndex = '9999';
 
-                        // TODO: Move all activities from old date to new date
-                        // For now, just save the mapping
-                        const savedDates = JSON.parse(localStorage.getItem(`${getStorageKey()}_dayDates`) || '{}');
-                        savedDates[dateKey] = newDateKey;
-                        localStorage.setItem(`${getStorageKey()}_dayDates`, JSON.stringify(savedDates));
+            document.body.appendChild(overlay);
+            document.body.appendChild(input);
 
-                        // Re-render
-                        renderPlanningView();
-                    } else {
-                        alert('Date invalide. Utilisez le format jj/mm/aaaa');
-                    }
+            input.focus();
+            input.showPicker(); // Open calendar immediately
+
+            const cleanup = () => {
+                document.body.removeChild(input);
+                document.body.removeChild(overlay);
+            };
+
+            input.addEventListener('change', async () => {
+                const newDateKey = input.value;
+                if (newDateKey && newDateKey !== dateKey) {
+                    // TODO: Move all activities from old date to new date in Supabase
+                    // For now, just save the mapping
+                    const savedDates = JSON.parse(localStorage.getItem(`${getStorageKey()}_dayDates`) || '{}');
+                    savedDates[dateKey] = newDateKey;
+                    localStorage.setItem(`${getStorageKey()}_dayDates`, JSON.stringify(savedDates));
+
+                    cleanup();
+                    // Re-render
+                    await renderPlanningView();
                 } else {
-                    alert('Format invalide. Utilisez le format jj/mm/aaaa');
+                    cleanup();
                 }
-            }
+            });
+
+            overlay.addEventListener('click', cleanup);
+            input.addEventListener('blur', () => {
+                setTimeout(cleanup, 200); // Delay to allow date selection
+            });
         }
 
         // Save day location
