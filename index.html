@@ -921,6 +921,30 @@
             flex-shrink: 0;
             position: relative;
         }
+        .project-selector-calendar {
+            position: relative;
+        }
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: var(--gray-100, #F3F4F6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .btn-icon:hover {
+            background: var(--gray-200, #E5E7EB);
+        }
+        .btn-icon.user-avatar {
+            background: var(--primary, #228be6);
+            color: white;
+        }
         .planning-main-title {
             font-size: 22px;
             font-weight: 700;
@@ -1477,15 +1501,27 @@
         <!-- Main Content (Events) -->
         <div class="main-content">
             <div class="content-header">
-                <div class="view-tabs">
-                    <button class="view-tab active" onclick="switchView('timeline')">
-                        📅 Vue Calendrier
-                    </button>
-                    <button class="view-tab" onclick="switchView('planning')">
-                        📊 Planning Hebdomadaire
-                    </button>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div class="view-tabs">
+                        <button class="view-tab active" onclick="switchView('timeline')">
+                            📅 Vue Calendrier
+                        </button>
+                        <button class="view-tab" onclick="switchView('planning')">
+                            📊 Planning Hebdomadaire
+                        </button>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div class="project-selector-calendar">
+                            <button class="project-btn" onclick="toggleProjectDropdown()">
+                                <span id="currentProjectNameCalendar">Mes Projets</span>
+                                <span style="margin-left: auto;">▼</span>
+                            </button>
+                            <div class="project-dropdown" id="projectDropdownCalendar"></div>
+                        </div>
+                        <button class="btn-icon user-avatar" id="userAvatarCalendar" onclick="toggleUserMenu()" title="Menu utilisateur">U</button>
+                    </div>
                 </div>
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 16px;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
                     <button class="nav-btn" onclick="previousDay()" title="Jour précédent">‹</button>
                     <div style="flex: 1; text-align: center;">
                         <h2 class="content-title" id="contentTitle" style="margin: 0;">Aujourd'hui</h2>
@@ -1786,6 +1822,7 @@
 
             const initials = currentUser.email ? currentUser.email.substring(0, 2).toUpperCase() : 'U';
             document.getElementById('userAvatar').textContent = initials;
+            document.getElementById('userAvatarCalendar').textContent = initials;
             document.getElementById('userName').textContent = currentUser.email || 'Utilisateur';
             document.getElementById('userEmail').textContent = currentUser.email || '';
 
@@ -2276,10 +2313,12 @@
         async function renderProjects() {
             const dropdown = document.getElementById('projectDropdown');
             const dropdownPlanning = document.getElementById('projectDropdownPlanning');
+            const dropdownCalendar = document.getElementById('projectDropdownCalendar');
             const currentProj = projects.find(p => p.id === currentProject);
 
             document.getElementById('currentProjectName').textContent = currentProj ? currentProj.name : 'Mes Projets';
             document.getElementById('currentProjectNamePlanning').textContent = currentProj ? currentProj.name : 'Mes Projets';
+            document.getElementById('currentProjectNameCalendar').textContent = currentProj ? currentProj.name : 'Mes Projets';
 
             // Afficher/cacher le bouton de partage et les collaborateurs
             if (currentProject) {
@@ -2312,10 +2351,13 @@
                 </button>
             `;
 
-            // Fill both dropdowns
+            // Fill all dropdowns
             dropdown.innerHTML = dropdownHTML;
             if (dropdownPlanning) {
                 dropdownPlanning.innerHTML = dropdownHTML;
+            }
+            if (dropdownCalendar) {
+                dropdownCalendar.innerHTML = dropdownHTML;
             }
         }
 
@@ -2327,11 +2369,19 @@
             document.getElementById('projectDropdownPlanning').classList.toggle('show');
         }
 
+        function toggleUserMenu() {
+            // Simple logout action for now
+            if (confirm('Se déconnecter ?')) {
+                handleLogout();
+            }
+        }
+
         async function selectProject(id) {
             currentProject = id;
-            // Close both dropdowns
+            // Close all dropdowns
             document.getElementById('projectDropdown').classList.remove('show');
             document.getElementById('projectDropdownPlanning').classList.remove('show');
+            document.getElementById('projectDropdownCalendar').classList.remove('show');
             renderProjects();
 
             // Charger les activités du projet sélectionné
