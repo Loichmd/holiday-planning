@@ -914,15 +914,19 @@
             border-bottom: 1px solid #e9ecef;
             flex-shrink: 0;
         }
+        .planning-header .view-tabs {
+            margin-bottom: 20px;
+        }
         .planning-main-title {
             font-size: 22px;
             font-weight: 700;
             color: #212529;
-            margin-bottom: 4px;
+            margin: 0 0 4px 0;
         }
         .planning-subtitle {
             font-size: 14px;
             color: #868e96;
+            margin: 0;
         }
 
         /* Container horizontal scroll */
@@ -932,73 +936,111 @@
             overflow-y: hidden;
             padding: 24px;
             display: flex;
-            gap: 16px;
+            gap: 20px;
             align-items: flex-start;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+        .planning-board::-webkit-scrollbar {
+            height: 8px;
+        }
+        .planning-board::-webkit-scrollbar-track {
+            background: #f1f3f5;
+            border-radius: 4px;
+        }
+        .planning-board::-webkit-scrollbar-thumb {
+            background: #ced4da;
+            border-radius: 4px;
+        }
+        .planning-board::-webkit-scrollbar-thumb:hover {
+            background: #adb5bd;
         }
 
         /* Colonne Jour */
         .day-column-trello {
-            flex: 0 0 320px;
+            flex: 0 0 340px;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
             display: flex;
             flex-direction: column;
-            max-height: calc(100vh - 180px);
+            max-height: calc(100vh - 200px);
+            transition: all 0.2s ease;
+        }
+        .day-column-trello:hover {
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
         }
 
         .day-column-header {
-            padding: 16px;
-            border-bottom: 2px solid #e9ecef;
+            padding: 20px;
+            border-bottom: 2px solid #f1f3f5;
             flex-shrink: 0;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border-radius: 16px 16px 0 0;
         }
         .day-number {
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 700;
             color: #228be6;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
+            letter-spacing: 0.8px;
+            margin-bottom: 6px;
         }
         .day-date {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 700;
             color: #212529;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
         }
         .day-location {
             font-size: 13px;
             color: #868e96;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
         }
 
         /* Liste de cartes */
         .day-cards-list {
             flex: 1;
             overflow-y: auto;
-            padding: 12px;
-            min-height: 100px;
+            overflow-x: hidden;
+            padding: 16px;
+            min-height: 120px;
+        }
+        .day-cards-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .day-cards-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .day-cards-list::-webkit-scrollbar-thumb {
+            background: #dee2e6;
+            border-radius: 3px;
+        }
+        .day-cards-list::-webkit-scrollbar-thumb:hover {
+            background: #ced4da;
         }
 
         /* Carte activité */
         .activity-card-trello {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 8px;
+            background: white;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 10px;
             cursor: grab;
-            transition: all 0.2s;
-            border-left: 3px solid #228be6;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 4px solid #228be6;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
         }
         .activity-card-trello:hover {
-            background: #e9ecef;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            background: #f8f9fa;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
         }
         .activity-card-trello:active {
             cursor: grabbing;
+            transform: scale(0.98);
         }
         .activity-card-trello.activite { border-left-color: #51cf66; }
         .activity-card-trello.avion { border-left-color: #339af0; }
@@ -1007,34 +1049,40 @@
 
         .activity-card-time {
             font-size: 11px;
-            font-weight: 600;
-            color: #868e96;
-            margin-bottom: 6px;
+            font-weight: 700;
+            color: #228be6;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         .activity-card-title {
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 600;
             color: #212529;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            line-height: 1.4;
         }
         .activity-card-location {
             font-size: 12px;
             color: #868e96;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
         .activity-card-meta {
             display: flex;
-            gap: 6px;
+            gap: 8px;
             flex-wrap: wrap;
         }
         .activity-card-badge {
-            padding: 2px 6px;
-            background: white;
-            border-radius: 4px;
-            font-size: 10px;
+            padding: 4px 8px;
+            background: #f1f3f5;
+            border-radius: 6px;
+            font-size: 11px;
             font-weight: 600;
             color: #495057;
         }
@@ -1436,6 +1484,14 @@
             <!-- Planning View - Trello Style -->
             <div class="planning-view" id="planningView">
                 <div class="planning-header">
+                    <div class="view-tabs">
+                        <button class="view-tab" onclick="switchView('timeline')">
+                            📅 Vue Calendrier
+                        </button>
+                        <button class="view-tab active" onclick="switchView('planning')">
+                            📊 Planning Hebdomadaire
+                        </button>
+                    </div>
                     <h2 class="planning-main-title">Planning du voyage</h2>
                     <p class="planning-subtitle">Organisez vos activités jour par jour</p>
                 </div>
@@ -2484,7 +2540,7 @@
         
         function switchView(view) {
             currentView = view;
-            
+
             // Update tabs
             document.querySelectorAll('.view-tab').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.view-tab').forEach(tab => {
@@ -2493,32 +2549,29 @@
                     tab.classList.add('active');
                 }
             });
-            
+
             // Show/hide views and header elements
-            const sidebarContent = document.querySelector('.sidebar-content');
+            const sidebar = document.querySelector('.sidebar');
             const timelineContainer = document.getElementById('timelineContainer');
             const planningView = document.getElementById('planningView');
-            const contentTitle = document.getElementById('contentTitle');
-            const contentSubtitle = document.getElementById('contentSubtitle');
-            
+            const contentHeader = document.querySelector('.content-header');
+
             if (view === 'timeline') {
                 // Show timeline view
                 if (timelineContainer) timelineContainer.style.display = 'block';
                 if (planningView) planningView.style.display = 'none';
-                // Show calendar header
-                if (contentTitle) contentTitle.style.display = 'block';
-                if (contentSubtitle) contentSubtitle.style.display = 'block';
-                // Show sidebar content
-                if (sidebarContent) sidebarContent.style.display = 'block';
+                // Show sidebar
+                if (sidebar) sidebar.style.display = 'flex';
+                // Show content header
+                if (contentHeader) contentHeader.style.display = 'block';
             } else {
-                // Show planning view
+                // Show planning view FULLSCREEN
                 if (timelineContainer) timelineContainer.style.display = 'none';
-                if (planningView) planningView.style.display = 'block';
-                // Hide calendar header
-                if (contentTitle) contentTitle.style.display = 'none';
-                if (contentSubtitle) contentSubtitle.style.display = 'none';
-                // Hide sidebar content (mini calendar)
-                if (sidebarContent) sidebarContent.style.display = 'none';
+                if (planningView) planningView.style.display = 'flex';
+                // Hide sidebar completely
+                if (sidebar) sidebar.style.display = 'none';
+                // Hide content header (tabs will be in planning header)
+                if (contentHeader) contentHeader.style.display = 'none';
                 renderPlanningView();
             }
         }
