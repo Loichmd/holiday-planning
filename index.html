@@ -915,7 +915,10 @@
             flex-shrink: 0;
         }
         .planning-header .view-tabs {
-            margin-bottom: 20px;
+            margin: 0;
+        }
+        .project-selector-planning {
+            flex-shrink: 0;
         }
         .planning-main-title {
             font-size: 22px;
@@ -1484,13 +1487,21 @@
             <!-- Planning View - Trello Style -->
             <div class="planning-view" id="planningView">
                 <div class="planning-header">
-                    <div class="view-tabs">
-                        <button class="view-tab" onclick="switchView('timeline')">
-                            📅 Vue Calendrier
-                        </button>
-                        <button class="view-tab active" onclick="switchView('planning')">
-                            📊 Planning Hebdomadaire
-                        </button>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div class="view-tabs">
+                            <button class="view-tab" onclick="switchView('timeline')">
+                                📅 Vue Calendrier
+                            </button>
+                            <button class="view-tab active" onclick="switchView('planning')">
+                                📊 Planning Hebdomadaire
+                            </button>
+                        </div>
+                        <div class="project-selector-planning">
+                            <button class="project-btn" onclick="toggleProjectDropdown()">
+                                <span id="currentProjectNamePlanning">Mes Projets</span>
+                                <span style="margin-left: 8px;">▼</span>
+                            </button>
+                        </div>
                     </div>
                     <h2 class="planning-main-title">Planning du voyage</h2>
                     <p class="planning-subtitle">Organisez vos activités jour par jour</p>
@@ -2245,6 +2256,7 @@
             const currentProj = projects.find(p => p.id === currentProject);
 
             document.getElementById('currentProjectName').textContent = currentProj ? currentProj.name : 'Mes Projets';
+            document.getElementById('currentProjectNamePlanning').textContent = currentProj ? currentProj.name : 'Mes Projets';
 
             // Afficher/cacher le bouton de partage et les collaborateurs
             if (currentProject) {
