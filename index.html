@@ -1261,7 +1261,10 @@
 
                 <!-- Liste des collaborateurs -->
                 <div id="collaboratorsSection" style="padding: 0 20px 12px 20px; display: none;">
-                    <h4 style="font-size: 12px; font-weight: 600; color: #868e96; margin-bottom: 8px; text-transform: uppercase;">Collaborateurs</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <h4 style="font-size: 12px; font-weight: 600; color: #868e96; text-transform: uppercase; margin: 0;">Collaborateurs</h4>
+                        <button onclick="openShareModalForCurrentProject()" style="background: none; border: none; color: #339af0; font-size: 11px; cursor: pointer; padding: 4px 8px; font-weight: 600;">Voir tout</button>
+                    </div>
                     <div id="collaboratorsMiniList"></div>
                 </div>
             </div>
@@ -1750,9 +1753,13 @@
 
             if (result.success) {
                 const list = document.getElementById('collaboratorsMiniList');
+                const totalCollaborators = result.shares.length;
+                const maxDisplay = 3; // Afficher max 3 collaborateurs
 
                 // Ajouter le propriétaire
                 let html = '';
+                let count = 0;
+
                 if (project && isOwner) {
                     html += `
                         <div style="display: flex; align-items: center; gap: 8px; padding: 6px; background: #f8f9fa; border-radius: 6px; margin-bottom: 6px;">
@@ -1765,10 +1772,11 @@
                             </div>
                         </div>
                     `;
+                    count++;
                 }
 
-                // Ajouter les collaborateurs
-                result.shares.forEach(share => {
+                // Ajouter les collaborateurs (max 3)
+                result.shares.slice(0, maxDisplay).forEach(share => {
                     const initials = share.shared_with_email.substring(0, 2).toUpperCase();
                     const isCurrentUser = share.shared_with_email === currentUser.email || share.shared_with_user_id === currentUser.id;
 
@@ -1787,7 +1795,18 @@
                             </div>
                         </div>
                     `;
+                    count++;
                 });
+
+                // Afficher "et X autres" si plus de collaborateurs
+                if (totalCollaborators > maxDisplay) {
+                    const remaining = totalCollaborators - maxDisplay;
+                    html += `
+                        <div style="text-align: center; padding: 8px; font-size: 11px; color: #868e96;">
+                            et ${remaining} autre${remaining > 1 ? 's' : ''}
+                        </div>
+                    `;
+                }
 
                 if (html === '') {
                     list.innerHTML = '<p style="font-size: 12px; color: #868e96; text-align: center; padding: 8px;">Aucun collaborateur</p>';
