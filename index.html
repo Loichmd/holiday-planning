@@ -897,30 +897,25 @@
             color: white;
         }
         
+        /* ============================
+           PLANNING VIEW - STYLE TRELLO
+           ============================ */
         .planning-view {
             display: none;
             flex: 1;
-            overflow-y: auto;
             background: #f8f9fa;
+            overflow: hidden;
+            flex-direction: column;
         }
-        
+
         .planning-header {
-            padding: 24px;
+            padding: 20px 24px;
             background: white;
             border-bottom: 1px solid #e9ecef;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-        .planning-header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
+            flex-shrink: 0;
         }
         .planning-main-title {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 700;
             color: #212529;
             margin-bottom: 4px;
@@ -929,33 +924,119 @@
             font-size: 14px;
             color: #868e96;
         }
-        .year-navigation {
+
+        /* Container horizontal scroll */
+        .planning-board {
+            flex: 1;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 24px;
             display: flex;
-            align-items: center;
-            gap: 12px;
+            gap: 16px;
+            align-items: flex-start;
         }
-        .year-btn {
-            padding: 8px 16px;
-            border: none;
-            background: #f8f9fa;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            color: #495057;
-            transition: all 0.2s;
+
+        /* Colonne Jour */
+        .day-column-trello {
+            flex: 0 0 320px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 180px);
         }
-        .year-btn:hover {
-            background: #e9ecef;
+
+        .day-column-header {
+            padding: 16px;
+            border-bottom: 2px solid #e9ecef;
+            flex-shrink: 0;
         }
-        .year-display {
-            font-size: 18px;
+        .day-number {
+            font-size: 11px;
             font-weight: 700;
             color: #228be6;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
         }
-        
-        .weeks-container {
-            padding: 24px;
+        .day-date {
+            font-size: 16px;
+            font-weight: 700;
+            color: #212529;
+            margin-bottom: 4px;
+        }
+        .day-location {
+            font-size: 13px;
+            color: #868e96;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Liste de cartes */
+        .day-cards-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            min-height: 100px;
+        }
+
+        /* Carte activité */
+        .activity-card-trello {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: grab;
+            transition: all 0.2s;
+            border-left: 3px solid #228be6;
+        }
+        .activity-card-trello:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .activity-card-trello:active {
+            cursor: grabbing;
+        }
+        .activity-card-trello.activite { border-left-color: #51cf66; }
+        .activity-card-trello.avion { border-left-color: #339af0; }
+        .activity-card-trello.hotel { border-left-color: #ff922b; }
+        .activity-card-trello.restaurant { border-left-color: #fa5252; }
+
+        .activity-card-time {
+            font-size: 11px;
+            font-weight: 600;
+            color: #868e96;
+            margin-bottom: 6px;
+        }
+        .activity-card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .activity-card-location {
+            font-size: 12px;
+            color: #868e96;
+            margin-bottom: 6px;
+        }
+        .activity-card-meta {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .activity-card-badge {
+            padding: 2px 6px;
+            background: white;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            color: #495057;
         }
         
         .week-card {
@@ -1346,23 +1427,14 @@
                 </div>
             </div>
             
-            <!-- Planning View -->
+            <!-- Planning View - Trello Style -->
             <div class="planning-view" id="planningView">
                 <div class="planning-header">
-                    <div class="planning-header-content">
-                        <div>
-                            <h2 class="planning-main-title">Planning complet du voyage</h2>
-                            <p class="planning-subtitle">Vue annuelle - Scroll pour naviguer</p>
-                        </div>
-                        <div class="year-navigation">
-                            <button class="year-btn" onclick="changeYear(-1)">‹ Année précédente</button>
-                            <span class="year-display" id="currentYearDisplay">2025</span>
-                            <button class="year-btn" onclick="changeYear(1)">Année suivante ›</button>
-                        </div>
-                    </div>
+                    <h2 class="planning-main-title">Planning du voyage</h2>
+                    <p class="planning-subtitle">Organisez vos activités jour par jour</p>
                 </div>
-                <div class="weeks-container" id="weeksContainer">
-                    <!-- Les semaines seront générées ici dynamiquement -->
+                <div class="planning-board" id="planningBoard">
+                    <!-- Les colonnes jour seront générées ici -->
                 </div>
             </div>
         </div>
@@ -2454,35 +2526,100 @@
         
         
         function renderPlanningView() {
-            // Use the current display year
-            const yearToDisplay = currentDisplayYear;
-            
-            // Update year display
-            document.getElementById('currentYearDisplay').textContent = yearToDisplay;
-            
-            // Generate ALL weeks of the year (52-53 weeks)
-            const firstDayOfYear = new Date(yearToDisplay, 0, 1);
-            const lastDayOfYear = new Date(yearToDisplay, 11, 31);
-            
-            const firstWeekStart = getWeekStart(firstDayOfYear);
-            const lastWeekStart = getWeekStart(lastDayOfYear);
-            
-            // Generate all weeks
-            const weeks = [];
-            let currentWeek = new Date(firstWeekStart);
-            
-            while (currentWeek <= lastWeekStart) {
-                weeks.push(new Date(currentWeek));
-                currentWeek.setDate(currentWeek.getDate() + 7);
-            }
-            
-            console.log(`Rendering ${weeks.length} weeks for year ${yearToDisplay}`);
-            
-            // Load saved regions (now per day instead of per week)
-            const savedRegions = JSON.parse(localStorage.getItem(`${getStorageKey()}_regions`) || '{}');
-            
-            // Get all project activities
+            // Get all activities for current project sorted by date
             const projectActivities = activities.filter(a => a.projectId === currentProject);
+
+            if (projectActivities.length === 0) {
+                document.getElementById('planningBoard').innerHTML = `
+                    <div style="padding: 60px; text-align: center; color: #868e96; width: 100%;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">📅</div>
+                        <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Aucune activité</div>
+                        <div style="font-size: 14px;">Ajoutez des activités pour commencer à organiser votre voyage</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Group activities by date
+            const activitiesByDate = {};
+            projectActivities.forEach(activity => {
+                const dateKey = activity.date.toISOString().split('T')[0];
+                if (!activitiesByDate[dateKey]) {
+                    activitiesByDate[dateKey] = [];
+                }
+                activitiesByDate[dateKey].push(activity);
+            });
+
+            // Sort dates
+            const sortedDates = Object.keys(activitiesByDate).sort();
+
+            // Load saved locations
+            const savedRegions = JSON.parse(localStorage.getItem(`${getStorageKey()}_regions`) || '{}');
+
+            // Generate columns for each day
+            const columnsHTML = sortedDates.map((dateKey, index) => {
+                const date = new Date(dateKey + 'T12:00:00'); // Avoid timezone issues
+                const dayActivities = activitiesByDate[dateKey];
+                dayActivities.sort((a, b) => (a.time || '00:00').localeCompare(b.time || '00:00'));
+
+                const dayNumber = index + 1;
+                const monthNames = ['janv', 'févr', 'mars', 'avr', 'mai', 'juin', 'juil', 'août', 'sept', 'oct', 'nov', 'déc'];
+                const dayNames = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
+
+                const formattedDate = `${dayNames[date.getDay()]} ${date.getDate()} ${monthNames[date.getMonth()]}`;
+                const location = savedRegions[dateKey] || '';
+
+                // Determine location from activities if not saved
+                const autoLocation = location || (dayActivities[0]?.location ? dayActivities[0].location.split(',')[0] : '');
+
+                const cardsHTML = dayActivities.map(activity => renderActivityCardTrello(activity)).join('');
+
+                return `
+                    <div class="day-column-trello" data-date="${dateKey}">
+                        <div class="day-column-header">
+                            <div class="day-number">Jour ${dayNumber}</div>
+                            <div class="day-date">${formattedDate}</div>
+                            ${autoLocation ? `<div class="day-location">📍 ${autoLocation}</div>` : ''}
+                        </div>
+                        <div class="day-cards-list">
+                            ${cardsHTML}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('planningBoard').innerHTML = columnsHTML;
+        }
+
+        // Render activity card for Trello view
+        function renderActivityCardTrello(activity) {
+            const cat = CATEGORIES[activity.category];
+            const time = activity.time ? activity.time.substring(0, 5) : '';
+
+            return `
+                <div class="activity-card-trello ${activity.category}" onclick="editActivity('${activity.id}')" draggable="true">
+                    ${time ? `<div class="activity-card-time">${time}</div>` : ''}
+                    <div class="activity-card-title">
+                        <span>${cat.icon}</span>
+                        <span>${activity.title}</span>
+                    </div>
+                    ${activity.location ? `<div class="activity-card-location">📍 ${activity.location}</div>` : ''}
+                    ${activity.duration || activity.attachments?.length ? `
+                        <div class="activity-card-meta">
+                            ${activity.duration ? `<span class="activity-card-badge">⏱️ ${activity.duration}h</span>` : ''}
+                            ${activity.attachments?.length ? `<span class="activity-card-badge">📎 ${activity.attachments.length}</span>` : ''}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // LEGACY FUNCTIONS - Kept but unused in new Trello planning view
+        function getWeekNumber(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
             
             // Render all weeks
             const weeksHTML = weeks.map(weekStart => {
