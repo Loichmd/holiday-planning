@@ -1,0 +1,1957 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planning Vacances - Responsive</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #6366F1;
+            --primary-dark: #4F46E5;
+            --accent: #EC4899;
+            --gray-50: #F9FAFB;
+            --gray-100: #F3F4F6;
+            --gray-200: #E5E7EB;
+            --gray-600: #4B5563;
+            --gray-700: #374151;
+            --gray-900: #111827;
+            --radius: 12px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-900);
+            line-height: 1.6;
+        }
+
+        /* Login Screen - Keep existing gradient but modernize */
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            padding: 20px;
+        }
+
+        .login-box {
+            background: white;
+            border-radius: 24px;
+            padding: 48px 40px;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .login-logo { font-size: 56px; text-align: center; margin-bottom: 16px; }
+        .login-title { font-size: 28px; font-weight: 700; text-align: center; margin-bottom: 8px; }
+        .login-subtitle { font-size: 15px; text-align: center; color: var(--gray-600); margin-bottom: 32px; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; font-size: 14px; font-weight: 600; color: var(--gray-700); margin-bottom: 8px; }
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius);
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+        .btn-secondary {
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+        .btn-secondary:hover { background: var(--gray-200); }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 24px 0;
+            color: var(--gray-600);
+            font-size: 14px;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--gray-200);
+        }
+
+        .link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .link:hover { text-decoration: underline; }
+
+        /* App Container */
+        .app-container {
+            display: none;
+            min-height: 100vh;
+        }
+        .app-container.show {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Sidebar - Desktop Only */
+        .sidebar {
+            display: none;
+        }
+
+        /* Main Content */
+        .main {
+            flex: 1;
+            padding: 16px;
+            padding-bottom: 80px;
+            overflow-y: auto;
+        }
+
+        /* Topbar - Mobile */
+        .topbar {
+            position: sticky;
+            top: 0;
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+        .project-selector {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--gray-900);
+            cursor: pointer;
+        }
+        .user-avatar-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Bottom Nav - Mobile */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0 env(safe-area-inset-bottom);
+            z-index: 100;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 16px;
+            border: none;
+            background: none;
+            color: var(--gray-600);
+            font-size: 11px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .nav-item.active { color: var(--primary); font-weight: 600; }
+        .nav-item svg { width: 24px; height: 24px; }
+
+        /* FAB */
+        #addBtn {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            font-size: 24px;
+            box-shadow: var(--shadow-lg);
+            cursor: pointer;
+            z-index: 50;
+        }
+        #addBtn:hover { background: var(--primary-dark); transform: scale(1.05); }
+
+        /* Calendar */
+        .calendar {
+            background: white;
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .calendar-month { font-size: 18px; font-weight: 700; }
+        .calendar-nav button {
+            background: var(--gray-100);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 0 4px;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .calendar-day:hover { background: var(--gray-100); }
+        .calendar-day.today { background: var(--primary); color: white; font-weight: 700; }
+        .calendar-day.other-month { color: var(--gray-400); }
+
+        /* Activity Cards */
+        .activity-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .activity-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+        .activity-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+        .activity-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-title { font-size: 20px; font-weight: 700; }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--gray-600);
+        }
+        .modal-body { padding: 24px; }
+        .modal-footer {
+            padding: 24px;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        /* Responsive */
+        @media (min-width: 768px) {
+            .app-container.show { flex-direction: row; }
+            .topbar, .bottom-nav { display: none; }
+            .sidebar {
+                display: flex;
+                flex-direction: column;
+                width: 300px;
+                background: white;
+                border-right: 1px solid var(--gray-200);
+            }
+            .sidebar-header {
+                padding: 24px;
+                border-bottom: 1px solid var(--gray-200);
+            }
+            .main {
+                padding: 32px;
+                padding-bottom: 32px;
+            }
+            #addBtn {
+                bottom: 32px;
+                right: 32px;
+            }
+        }
+</style>
+
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-container" id="loginScreen">
+        <div class="login-box">
+            <div class="login-logo">✈️</div>
+            <h1 class="login-title">Planning Vacances</h1>
+            <p class="login-subtitle">Organisez vos voyages en toute simplicité</p>
+            
+            <!-- Formulaire de connexion -->
+        <div id="loginForm">
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label class="form-label">📧 Email</label>
+                <input
+                    type="email"
+                    class="form-input"
+                    id="loginEmail"
+                    placeholder="votre@email.com"
+                    autocomplete="email"
+                >
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label class="form-label">🔒 Mot de passe</label>
+                <input
+                    type="password"
+                    class="form-input"
+                    id="loginPassword"
+                    placeholder="••••••••"
+                    autocomplete="current-password"
+                >
+            </div>
+
+            <button class="btn btn-primary" style="width: 100%; margin-bottom: 12px;" onclick="handleLogin()">
+                Se connecter
+            </button>
+
+            <div style="text-align: center; margin-top: 16px;">
+                <p style="font-size: 13px; color: #868e96; margin-bottom: 8px;">
+                    Pas encore de compte ?
+                </p>
+                <button class="btn btn-secondary" onclick="showSignupForm()">
+                    S'inscrire
+                </button>
+            </div>
+        </div>
+
+        <!-- Formulaire d'inscription (caché par défaut) -->
+        <div id="signupForm" style="display: none;">
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label class="form-label">📧 Email</label>
+                <input
+                    type="email"
+                    class="form-input"
+                    id="signupEmail"
+                    placeholder="votre@email.com"
+                    autocomplete="email"
+                >
+            </div>
+
+            <div class="form-group" style="margin-bottom: 8px;">
+                <label class="form-label">🔒 Mot de passe</label>
+                <input
+                    type="password"
+                    class="form-input"
+                    id="signupPassword"
+                    placeholder="Minimum 6 caractères"
+                    autocomplete="new-password"
+                >
+                <small style="font-size: 11px; color: #868e96; display: block; margin-top: 4px;">
+                    Au moins 6 caractères
+                </small>
+            </div>
+
+            <button class="btn btn-primary" style="width: 100%; margin-bottom: 12px; margin-top: 12px;" onclick="handleSignup()">
+                Créer mon compte
+            </button>
+
+            <div style="text-align: center; margin-top: 16px;">
+                <p style="font-size: 13px; color: #868e96; margin-bottom: 8px;">
+                    Déjà un compte ?
+                </p>
+                <button class="btn btn-secondary" onclick="showLoginForm()">
+                    Se connecter
+                </button>
+            </div>
+        </div>
+
+            <div class="divider">ou</div>
+            
+            <div class="demo-section">
+                <p class="demo-title">Découvrir en mode démo</p>
+                <button class="demo-btn" onclick="loginDemo()">Essayer sans compte</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Container -->
+    <div class="app-container" id="appContainer">
+        <!-- Topbar Mobile -->
+        <div class="topbar">
+            <div class="project-selector" onclick="toggleProjectDropdown()">
+                <span id="topbarProjectName">Mes Projets</span>
+                <span> ▼</span>
+            </div>
+            <button class="user-avatar-btn" id="topbarUserAvatar" onclick="showUserMenu()">U</button>
+        </div>
+
+        <!-- Sidebar (Calendar) -->
+        <div class="sidebar">
+            <div class="header">
+                <div class="header-top">
+                    <div class="user-profile">
+                        <div class="user-avatar" id="userAvatar">JD</div>
+                        <div class="user-info">
+                            <div class="user-name" id="userName">John Doe</div>
+                            <div class="user-email" id="userEmail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="2842474046684d50494558444d064b4745">[email&#160;protected]</a></div>
+                        </div>
+                    </div>
+                    <button class="logout-btn" onclick="handleLogout()">Déconnexion</button>
+                </div>
+                
+                <div class="project-selector">
+                    <button class="project-btn" onclick="toggleProjectDropdown()">
+                        <span id="currentProjectName">Mes Projets</span>
+                        <span style="margin-left: auto;">▼</span>
+                    </button>
+                    <div class="project-dropdown" id="projectDropdown"></div>
+                </div>
+
+                <!-- Bouton de partage visible -->
+                <div id="shareButtonContainer" style="padding: 12px 20px; display: none;">
+                    <button class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="openShareModalForCurrentProject()">
+                        <span>👥</span>
+                        <span>Partager ce projet</span>
+                    </button>
+                </div>
+
+                <!-- Liste des collaborateurs -->
+                <div id="collaboratorsSection" style="padding: 0 20px 12px 20px; display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <h4 style="font-size: 12px; font-weight: 600; color: #868e96; text-transform: uppercase; margin: 0;">Collaborateurs</h4>
+                        <button onclick="openShareModalForCurrentProject()" style="background: none; border: none; color: #339af0; font-size: 11px; cursor: pointer; padding: 4px 8px; font-weight: 600;">Voir tout</button>
+                    </div>
+                    <div id="collaboratorsMiniList"></div>
+                </div>
+            </div>
+            
+            <div class="sidebar-content">
+                <div class="date-display">
+                    <div class="date-info">
+                        <div class="current-date" id="currentDay">15</div>
+                        <div class="current-month" id="currentMonth">DÉC 2025</div>
+                    </div>
+                    <div class="nav-btns">
+                        <button class="nav-btn" onclick="previousMonth()">‹</button>
+                        <button class="nav-btn" onclick="nextMonth()">›</button>
+                    </div>
+                </div>
+                
+                <div class="mini-calendar">
+                    <div class="calendar-weekdays">
+                        <div class="calendar-weekday">L</div>
+                        <div class="calendar-weekday">M</div>
+                        <div class="calendar-weekday">M</div>
+                        <div class="calendar-weekday">J</div>
+                        <div class="calendar-weekday">V</div>
+                        <div class="calendar-weekday">S</div>
+                        <div class="calendar-weekday">D</div>
+                    </div>
+                    <div class="calendar-days" id="calendarDays"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content (Events) -->
+        <div class="main-content">
+            <div class="content-header">
+                <div class="view-tabs">
+                    <button class="view-tab active" onclick="switchView('timeline')">
+                        📅 Vue Calendrier
+                    </button>
+                    <button class="view-tab" onclick="switchView('planning')">
+                        📊 Planning Hebdomadaire
+                    </button>
+                </div>
+                <h2 class="content-title" id="contentTitle">Aujourd'hui</h2>
+                <p class="content-subtitle" id="contentSubtitle">Aucune activité prévue</p>
+            </div>
+            
+            <div class="events-container" id="timelineContainer">
+                <div class="events-timeline" id="eventsTimeline">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📅</div>
+                        <div class="empty-state-text">Aucune activité ce jour</div>
+                        <div class="empty-state-hint">Cliquez sur + pour ajouter une activité</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Planning View -->
+            <div class="planning-view" id="planningView">
+                <div class="planning-header">
+                    <div class="planning-header-content">
+                        <div>
+                            <h2 class="planning-main-title">Planning complet du voyage</h2>
+                            <p class="planning-subtitle">Vue annuelle - Scroll pour naviguer</p>
+                        </div>
+                        <div class="year-navigation">
+                            <button class="year-btn" onclick="changeYear(-1)">‹ Année précédente</button>
+                            <span class="year-display" id="currentYearDisplay">2025</span>
+                            <button class="year-btn" onclick="changeYear(1)">Année suivante ›</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="weeks-container" id="weeksContainer">
+                    <!-- Les semaines seront générées ici dynamiquement -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation Mobile -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" onclick="switchView('timeline')">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <span>Calendrier</span>
+            </button>
+            <button class="nav-item" onclick="switchView('planning')">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                <span>Planning</span>
+            </button>
+            <button class="nav-item" onclick="toggleProjectDropdown()">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                <span>Projets</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- FAB -->
+    <button class="fab" id="addBtn" onclick="openActivityModal()" style="display: none;">+</button>
+
+    <!-- Activity Modal -->
+    <div class="modal" id="activityModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Nouvelle activité</h3>
+                <button class="modal-close" onclick="closeActivityModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="activityForm">
+                    <div class="form-group">
+                        <label class="form-label">Titre *</label>
+                        <input type="text" class="form-input" id="activityTitle" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Date *</label>
+                            <input type="date" class="form-input" id="activityDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Heure</label>
+                            <input type="time" class="form-input" id="activityTime">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Durée (heures)</label>
+                        <input type="number" class="form-input" id="activityDuration" value="1" min="0.5" step="0.5">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Catégorie *</label>
+                        <div class="category-selector">
+                            <button type="button" class="category-btn active" data-category="activite" onclick="selectCategory('activite')">
+                                🎯 Activité
+                            </button>
+                            <button type="button" class="category-btn" data-category="avion" onclick="selectCategory('avion')">
+                                ✈️ Vol
+                            </button>
+                            <button type="button" class="category-btn" data-category="hotel" onclick="selectCategory('hotel')">
+                                🏨 Hôtel
+                            </button>
+                            <button type="button" class="category-btn" data-category="restaurant" onclick="selectCategory('restaurant')">
+                                🍽️ Repas
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Voyageurs (séparés par virgules)</label>
+                        <input type="text" class="form-input" id="activityTravelers" placeholder="Marie, Thomas, Sophie">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Lieu</label>
+                        <input type="text" class="form-input" id="activityLocation" placeholder="Adresse ou nom du lieu">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">URL de référence</label>
+                        <input type="url" class="form-input" id="activityUrl" placeholder="https://">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Pièces jointes</label>
+                        <div class="file-upload" onclick="document.getElementById('fileInput').click()">
+                            <input type="file" id="fileInput" multiple onchange="handleFilesWithValidation(this.files)">
+                            <div>📎 Cliquez pour ajouter des fichiers</div>
+                        </div>
+                        <div class="attachment-list" id="attachmentList"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-textarea" id="activityNotes"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeActivityModal()">Annuler</button>
+                <button class="btn btn-danger" id="deleteBtn" onclick="deleteCurrentActivity()" style="display: none;">Supprimer</button>
+                <button class="btn btn-primary" onclick="saveActivity()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Modal -->
+    <div class="modal" id="projectModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="projectModalTitle">Nouveau voyage</h3>
+                <button class="modal-close" onclick="closeProjectModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Nom du voyage *</label>
+                    <input type="text" class="form-input" id="projectName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-textarea" id="projectDescription"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Voyageurs (séparés par virgules)</label>
+                    <input type="text" class="form-input" id="projectTravelers" placeholder="Marie, Thomas, Sophie">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeProjectModal()">Annuler</button>
+                <button class="btn btn-primary" onclick="saveProject()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    
+    <!-- Share Modal -->
+    <div class="modal" id="shareModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Partager le projet</h3>
+                <button class="modal-close" onclick="closeShareModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="shareForm">
+                    <div class="form-group">
+                        <label class="form-label">Email du collaborateur</label>
+                        <input type="email" class="form-input" id="shareEmail" placeholder="email@exemple.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Permission</label>
+                        <select class="form-select" id="sharePermission">
+                            <option value="read">Lecture seule</option>
+                            <option value="write">Peut modifier</option>
+                        </select>
+                    </div>
+
+                    <button class="btn btn-primary" style="width: 100%;" onclick="handleShareProject()">Partager</button>
+                </div>
+
+                <div class="collaborators-list" id="collaboratorsList" style="margin-top: 24px;"></div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Configuration -->
+    <script src="config.js"></script>
+
+    <!-- Validation des fichiers -->
+    <script src="file-validation.js"></script>
+
+    <!-- Intégration Supabase -->
+    <script src="app-supabase.js?v=6"></script>
+
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+    <script>
+        // ============================================
+        // GESTION DE L'AUTHENTIFICATION
+        // ============================================
+
+        function showLoginForm() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('signupForm').style.display = 'none';
+        }
+
+        function showSignupForm() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('signupForm').style.display = 'block';
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                alert('Veuillez remplir tous les champs');
+                return;
+            }
+
+            const result = await login(email, password);
+
+            if (result.success) {
+                currentUser = result.user;
+                showApp();
+            } else {
+                alert('Erreur de connexion: ' + result.error);
+            }
+        }
+
+        async function handleSignup() {
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value;
+
+            if (!email || !password) {
+                alert('Veuillez remplir tous les champs');
+                return;
+            }
+
+            if (password.length < 6) {
+                alert('Le mot de passe doit contenir au moins 6 caractères');
+                return;
+            }
+
+            const result = await signup(email, password);
+
+            if (result.success) {
+                alert('Compte créé avec succès ! Vous pouvez maintenant vous connecter.');
+                showLoginForm();
+                document.getElementById('loginEmail').value = email;
+            } else {
+                alert('Erreur lors de la création du compte: ' + result.error);
+            }
+        }
+
+        async function handleLogout() {
+            if (!confirm('Voulez-vous vraiment vous déconnecter ?')) {
+                return;
+            }
+
+            const result = await logout();
+
+            if (result.success) {
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('appContainer').classList.remove('show');
+                document.getElementById('addBtn').style.display = 'none';
+            }
+        }
+
+        function loginDemo() {
+            currentUser = {
+                id: 'demo',
+                email: 'demo@planningvacances.com',
+                user_metadata: { name: 'Utilisateur Démo' }
+            };
+            showApp();
+        }
+
+        async function showApp() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appContainer').classList.add('show');
+            document.getElementById('addBtn').style.display = 'flex';
+
+            const initials = currentUser.email ? currentUser.email.substring(0, 2).toUpperCase() : 'U';
+
+            // Update desktop sidebar
+            document.getElementById('userAvatar').textContent = initials;
+            document.getElementById('userName').textContent = currentUser.email || 'Utilisateur';
+            document.getElementById('userEmail').textContent = currentUser.email || '';
+
+            // Update mobile topbar
+            const topbarAvatar = document.getElementById('topbarUserAvatar');
+            if (topbarAvatar) {
+                topbarAvatar.textContent = initials;
+            }
+
+            // Attendre que les données soient chargées AVANT de render
+            await loadData();
+            renderCalendar();
+            renderProjects();
+        }
+
+        // ============================================
+        // PARTAGE DE PROJETS
+        // ============================================
+
+        let currentSharingProjectId = null;
+
+        async function openShareModal(projectId) {
+            currentSharingProjectId = projectId;
+            document.getElementById('shareEmail').value = '';
+            document.getElementById('sharePermission').value = 'read';
+            document.getElementById('shareModal').classList.add('show');
+
+            // Afficher/cacher le formulaire d'ajout selon les permissions
+            const canShare = isProjectOwner(projectId) || await canEditProject(projectId);
+            const shareForm = document.getElementById('shareForm');
+            if (shareForm) {
+                shareForm.style.display = canShare ? 'block' : 'none';
+            }
+
+            await loadCollaborators(projectId);
+        }
+
+        function closeShareModal() {
+            document.getElementById('shareModal').classList.remove('show');
+            currentSharingProjectId = null;
+        }
+
+        async function handleShareProject() {
+            const email = document.getElementById('shareEmail').value.trim();
+            const permission = document.getElementById('sharePermission').value;
+
+            if (!email) {
+                alert('Veuillez entrer un email');
+                return;
+            }
+
+            const result = await shareProject(currentSharingProjectId, email, permission);
+
+            if (result.success) {
+                alert(`Projet partagé avec ${email} !`);
+                document.getElementById('shareEmail').value = '';
+                await loadCollaborators(currentSharingProjectId);
+            } else {
+                alert('Erreur: ' + result.error);
+            }
+        }
+
+        async function loadCollaborators(projectId) {
+            const result = await loadProjectShares(projectId);
+            const isOwner = isProjectOwner(projectId);
+            const project = projects.find(p => p.id === projectId);
+
+            if (result.success) {
+                const list = document.getElementById('collaboratorsList');
+                const canManageCollaborators = isOwner || await canEditProject(projectId);
+
+                // Afficher le propriétaire
+                let ownerHtml = '';
+                if (project) {
+                    // Trouver l'email du propriétaire (pour l'instant on utilise currentUser si c'est le propriétaire)
+                    const ownerEmail = isOwner ? currentUser.email : 'Propriétaire';
+                    ownerHtml = `
+                        <div class="collaborator-item" style="background: #e7f5ff; border: 1px solid #339af0;">
+                            <div>
+                                <div class="collaborator-email">
+                                    ${ownerEmail}
+                                    ${isOwner ? '<span style="color: #51cf66; font-size: 11px; margin-left: 6px;">(Vous)</span>' : ''}
+                                </div>
+                                <div class="collaborator-permission">
+                                    👑 Propriétaire
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (result.shares.length === 0) {
+                    list.innerHTML = '<h4 style="font-size: 13px; font-weight: 600; color: #495057; margin-bottom: 12px;">Membres du projet</h4>' +
+                        ownerHtml +
+                        '<p style="text-align: center; color: #868e96; font-size: 13px; margin-top: 12px;">Aucun collaborateur</p>';
+                    return;
+                }
+
+                list.innerHTML = '<h4 style="font-size: 13px; font-weight: 600; color: #495057; margin-bottom: 12px;">Membres du projet</h4>' +
+                    ownerHtml +
+                    '<div style="margin-top: 12px;"></div>' +
+                    result.shares.map(share => {
+                        const isCurrentUser = share.shared_with_email === currentUser.email || share.shared_with_user_id === currentUser.id;
+                        const canRemove = canManageCollaborators || isCurrentUser;
+                        const buttonText = isCurrentUser ? 'Me retirer' : '✕';
+
+                        return `
+                            <div class="collaborator-item">
+                                <div>
+                                    <div class="collaborator-email">
+                                        ${share.shared_with_email}
+                                        ${isCurrentUser ? '<span style="color: #51cf66; font-size: 11px; margin-left: 6px;">(Vous)</span>' : ''}
+                                    </div>
+                                    <div class="collaborator-permission">
+                                        ${share.permission === 'write' ? '✏️ Peut modifier' : '👁️ Lecture seule'}
+                                    </div>
+                                </div>
+                                ${canRemove ? `<button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="handleRemoveShare('${share.id}', ${isCurrentUser})">${buttonText}</button>` : ''}
+                            </div>
+                        `;
+                    }).join('');
+            }
+        }
+
+        async function handleRemoveShare(shareId, isCurrentUser = false) {
+            const message = isCurrentUser ? 'Voulez-vous vous retirer de ce projet ?' : 'Retirer ce collaborateur ?';
+
+            if (!confirm(message)) {
+                return;
+            }
+
+            const result = await removeProjectShare(shareId);
+
+            if (result.success) {
+                if (isCurrentUser) {
+                    // Si l'utilisateur se retire, fermer le modal et recharger les projets
+                    closeShareModal();
+                    await loadData();
+
+                    // Si c'était le projet actuel, sélectionner un autre projet
+                    if (currentProject === currentSharingProjectId) {
+                        currentProject = projects[0]?.id;
+                    }
+
+                    renderProjects();
+                    renderCalendar();
+                } else {
+                    await loadCollaborators(currentSharingProjectId);
+                }
+            } else {
+                alert('Erreur: ' + result.error);
+            }
+        }
+
+        // ============================================
+        // AFFICHAGE DES COLLABORATEURS EN SIDEBAR
+        // ============================================
+
+        async function loadAndDisplayCollaborators(projectId) {
+            const result = await loadProjectShares(projectId);
+            const isOwner = isProjectOwner(projectId);
+            const project = projects.find(p => p.id === projectId);
+
+            if (result.success) {
+                const list = document.getElementById('collaboratorsMiniList');
+                const totalCollaborators = result.shares.length;
+                const maxDisplay = 3; // Afficher max 3 collaborateurs
+
+                // Ajouter le propriétaire
+                let html = '';
+                let count = 0;
+
+                if (project && isOwner) {
+                    html += `
+                        <div style="display: flex; align-items: center; gap: 8px; padding: 6px; background: #f8f9fa; border-radius: 6px; margin-bottom: 6px;">
+                            <div style="width: 28px; height: 28px; border-radius: 50%; background: #339af0; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 600;">
+                                ${currentUser.email.substring(0, 2).toUpperCase()}
+                            </div>
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-size: 12px; font-weight: 600; color: #212529; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Vous</div>
+                                <div style="font-size: 10px; color: #868e96;">Propriétaire</div>
+                            </div>
+                        </div>
+                    `;
+                    count++;
+                }
+
+                // Ajouter les collaborateurs (max 3)
+                result.shares.slice(0, maxDisplay).forEach(share => {
+                    const initials = share.shared_with_email.substring(0, 2).toUpperCase();
+                    const isCurrentUser = share.shared_with_email === currentUser.email || share.shared_with_user_id === currentUser.id;
+
+                    html += `
+                        <div style="display: flex; align-items: center; gap: 8px; padding: 6px; background: #f8f9fa; border-radius: 6px; margin-bottom: 6px;">
+                            <div style="width: 28px; height: 28px; border-radius: 50%; background: #868e96; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 600;">
+                                ${initials}
+                            </div>
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-size: 12px; font-weight: 600; color: #212529; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    ${isCurrentUser ? 'Vous' : share.shared_with_email.split('@')[0]}
+                                </div>
+                                <div style="font-size: 10px; color: #868e96;">
+                                    ${share.permission === 'write' ? 'Peut modifier' : 'Lecture seule'}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    count++;
+                });
+
+                // Afficher "et X autres" si plus de collaborateurs
+                if (totalCollaborators > maxDisplay) {
+                    const remaining = totalCollaborators - maxDisplay;
+                    html += `
+                        <div style="text-align: center; padding: 8px; font-size: 11px; color: #868e96;">
+                            et ${remaining} autre${remaining > 1 ? 's' : ''}
+                        </div>
+                    `;
+                }
+
+                if (html === '') {
+                    list.innerHTML = '<p style="font-size: 12px; color: #868e96; text-align: center; padding: 8px;">Aucun collaborateur</p>';
+                } else {
+                    list.innerHTML = html;
+                }
+            }
+        }
+
+        function openShareModalForCurrentProject() {
+            if (currentProject) {
+                openShareModal(currentProject);
+            }
+        }
+
+        // ============================================
+        // VARIABLES GLOBALES (suite)
+        // ============================================
+
+        // Variables déjà déclarées dans app-supabase.js :
+        // currentUser, projects, activities, currentProject
+
+        let currentDate = new Date();
+        let selectedDate = new Date();
+        let editingActivity = null;
+        let editingProjectId = null;
+        let currentAttachments = [];
+
+        // Helper function to compare dates without timezone issues
+        function isSameDay(dateStr, dateObj) {
+            if (!dateStr) return false;
+            const parts = dateStr.split('-');
+            const year = parseInt(parts[0]);
+            const month = parseInt(parts[1]) - 1;
+            const day = parseInt(parts[2]);
+            
+            return year === dateObj.getFullYear() && 
+                   month === dateObj.getMonth() && 
+                   day === dateObj.getDate();
+        }
+
+        const CATEGORIES = {
+            activite: { icon: '🎯', color: '#51cf66', label: 'Activité' },
+            avion: { icon: '✈️', color: '#339af0', label: 'Vol' },
+            hotel: { icon: '🏨', color: '#ff922b', label: 'Hôtel' },
+            restaurant: { icon: '🍽️', color: '#fa5252', label: 'Repas' }
+        };
+
+        // Auth functions
+        function loginWithProvider(provider) {
+            const users = {
+                google: { id: 'google_123', name: 'Jean Dupont', email: 'jean.dupont@gmail.com', provider: 'google' },
+                microsoft: { id: 'ms_456', name: 'Marie Martin', email: 'marie.martin@outlook.com', provider: 'microsoft' },
+                apple: { id: 'apple_789', name: 'Thomas Bernard', email: 'thomas.bernard@icloud.com', provider: 'apple' }
+            };
+            
+            currentUser = users[provider];
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            showApp();
+        }
+
+        function loginDemo() {
+            currentUser = { id: 'demo', name: 'Utilisateur Démo', email: 'demo@planningvacances.com', provider: 'demo' };
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            showApp();
+        }
+
+        function logout() {
+            if (confirm('Voulez-vous vraiment vous déconnecter ?')) {
+                currentUser = null;
+                localStorage.removeItem('currentUser');
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('appContainer').classList.remove('show');
+                document.getElementById('addBtn').style.display = 'none';
+            }
+        }
+
+        function checkAuth() {
+            const stored = localStorage.getItem('currentUser');
+            if (stored) {
+                currentUser = JSON.parse(stored);
+                showApp();
+            }
+        }
+
+        function getStorageKey() {
+            return `planningVoyages_${currentUser.id}`;
+        }
+
+        async function loadData() {
+            // Charger les projets depuis Supabase
+            const result = await loadProjects();
+
+            if (result.success) {
+                projects = result.projects;
+
+                // Si aucun projet, en créer un par défaut
+                if (projects.length === 0) {
+                    await createProject('Mon premier voyage', '', []);
+                    await loadProjects();
+                    projects = (await loadProjects()).projects;
+                }
+
+                currentProject = projects[0].id;
+
+                // Charger les activités du projet actuel
+                if (currentProject) {
+                    const activitiesResult = await loadActivities(currentProject);
+                    if (activitiesResult.success) {
+                        activities = activitiesResult.activities;
+                    }
+                }
+            }
+        }
+
+        function saveData() {
+            // Plus besoin avec Supabase - les données sont sauvegardées automatiquement
+            console.log('saveData() appelé - données sauvegardées via Supabase');
+        }
+
+        // Calendar functions
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            document.getElementById('currentDay').textContent = selectedDate.getDate();
+            const monthNames = ['JAN', 'FÉV', 'MAR', 'AVR', 'MAI', 'JUN', 'JUL', 'AOÛ', 'SEP', 'OCT', 'NOV', 'DÉC'];
+            document.getElementById('currentMonth').textContent = `${monthNames[selectedDate.getMonth()]} ${selectedDate.getFullYear()}`;
+            
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const daysInPrevMonth = new Date(year, month, 0).getDate();
+            
+            const calendarDays = document.getElementById('calendarDays');
+            calendarDays.innerHTML = '';
+            
+            const startDay = firstDay === 0 ? 6 : firstDay - 1;
+            
+            for (let i = startDay - 1; i >= 0; i--) {
+                const day = daysInPrevMonth - i;
+                const dayEl = createDayElement(day, true);
+                calendarDays.appendChild(dayEl);
+            }
+            
+            const today = new Date();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const isToday = date.toDateString() === today.toDateString();
+                const isSelected = date.toDateString() === selectedDate.toDateString();
+                const hasEvents = activities.some(a => 
+                    a.projectId === currentProject && 
+                    isSameDay(a.date, date)
+                );
+                
+                const dayEl = createDayElement(day, false, isToday, isSelected, hasEvents);
+                dayEl.addEventListener('click', () => selectDate(date));
+                calendarDays.appendChild(dayEl);
+            }
+            
+            const remainingDays = 42 - calendarDays.children.length;
+            for (let day = 1; day <= remainingDays; day++) {
+                const dayEl = createDayElement(day, true);
+                calendarDays.appendChild(dayEl);
+            }
+            
+            renderEvents();
+        }
+
+        function createDayElement(day, isOtherMonth, isToday = false, isSelected = false, hasEvents = false) {
+            const div = document.createElement('div');
+            div.className = 'calendar-day';
+            if (isOtherMonth) div.classList.add('other-month');
+            if (isToday) div.classList.add('today');
+            if (isSelected) div.classList.add('selected');
+            if (hasEvents) div.classList.add('has-events');
+            div.textContent = day;
+            return div;
+        }
+
+        function selectDate(date) {
+            selectedDate = date;
+            renderCalendar();
+        }
+
+        function previousMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        }
+
+        // Events rendering
+        function renderEvents() {
+            const timeline = document.getElementById('eventsTimeline');
+            const todayActivities = activities.filter(a => 
+                a.projectId === currentProject && 
+                isSameDay(a.date, selectedDate)
+            );
+            
+            // Update header
+            const today = new Date();
+            const isToday = selectedDate.toDateString() === today.toDateString();
+            document.getElementById('contentTitle').textContent = 
+                isToday ? 'Aujourd\'hui' : selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+            
+            document.getElementById('contentSubtitle').textContent = 
+                todayActivities.length === 0 ? 'Aucune activité prévue' : 
+                `${todayActivities.length} activité${todayActivities.length > 1 ? 's' : ''}`;
+            
+            if (todayActivities.length === 0) {
+                timeline.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📅</div>
+                        <div class="empty-state-text">Aucune activité ce jour</div>
+                        <div class="empty-state-hint">Cliquez sur + pour ajouter une activité</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            todayActivities.sort((a, b) => (a.time || '00:00').localeCompare(b.time || '00:00'));
+            
+            timeline.innerHTML = `
+                <div class="day-section">
+                    <div class="day-header">${selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                    ${todayActivities.map((activity, index) => renderEventCard(activity, index === 0)).join('')}
+                </div>
+            `;
+        }
+
+        function renderEventCard(activity, isFirst) {
+            const cat = CATEGORIES[activity.category];
+            const time = activity.time ? activity.time.substring(0, 5) : 'Journée';
+            const endTime = activity.time && activity.duration ? 
+                calculateEndTime(activity.time, activity.duration) : null;
+            
+            return `
+                <div class="event-card ${activity.category} ${isFirst ? 'first-of-day' : ''}" onclick="editActivity('${activity.id}')">
+                    <div class="event-time">${time}${endTime ? ' - ' + endTime : ''}</div>
+                    <div class="event-title">
+                        <span>${cat.icon}</span>
+                        <span>${activity.title}</span>
+                    </div>
+                    ${activity.location ? `<div class="event-location">📍 ${activity.location}</div>` : ''}
+                    <div class="event-meta">
+                        ${activity.duration ? `<div class="event-badge">⏱️ ${activity.duration}h</div>` : ''}
+                        ${activity.attachments?.length ? `<div class="event-badge">📎 ${activity.attachments.length}</div>` : ''}
+                    </div>
+                    ${activity.travelers?.length ? `
+                        <div class="event-travelers">
+                            ${activity.travelers.map(t => `<div class="traveler-badge">${t}</div>`).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function calculateEndTime(startTime, duration) {
+            const [hours, minutes] = startTime.split(':').map(Number);
+            const totalMinutes = hours * 60 + minutes + (duration * 60);
+            const endHours = Math.floor(totalMinutes / 60) % 24;
+            const endMinutes = totalMinutes % 60;
+            return `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+        }
+
+        // Projects
+        async function renderProjects() {
+            const dropdown = document.getElementById('projectDropdown');
+            const currentProj = projects.find(p => p.id === currentProject);
+
+            const projectName = currentProj ? currentProj.name : 'Mes Projets';
+            document.getElementById('currentProjectName').textContent = projectName;
+
+            // Update mobile topbar
+            const topbarProjectName = document.getElementById('topbarProjectName');
+            if (topbarProjectName) {
+                topbarProjectName.textContent = projectName;
+            }
+
+            // Afficher/cacher le bouton de partage et les collaborateurs
+            if (currentProject) {
+                document.getElementById('shareButtonContainer').style.display = 'block';
+                document.getElementById('collaboratorsSection').style.display = 'block';
+                await loadAndDisplayCollaborators(currentProject);
+            } else {
+                document.getElementById('shareButtonContainer').style.display = 'none';
+                document.getElementById('collaboratorsSection').style.display = 'none';
+            }
+
+            dropdown.innerHTML = projects.map(p => {
+                const count = activities.filter(a => a.projectId === p.id).length;
+                return `
+                    <div class="project-item ${p.id === currentProject ? 'active' : ''}" onclick="selectProject('${p.id}')">
+                        <div>
+                            <div class="project-item-name">${p.name}</div>
+                            <div class="project-item-count">${count} activité${count > 1 ? 's' : ''}</div>
+                        </div>
+                        <div class="project-actions" onclick="event.stopPropagation()">
+                            <button class="project-action-btn" onclick="editProject('${p.id}')" title="Modifier">✏️</button>
+                            ${projects.length > 1 ? `<button class="project-action-btn delete" onclick="deleteProjectFunc('${p.id}')" title="Supprimer">🗑️</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('') + `
+                <button class="project-add" onclick="openProjectModal()">
+                    <span>➕</span>
+                    <span>Nouveau voyage</span>
+                </button>
+            `;
+        }
+
+        function toggleProjectDropdown() {
+            document.getElementById('projectDropdown').classList.toggle('show');
+        }
+
+        async function selectProject(id) {
+            currentProject = id;
+            toggleProjectDropdown();
+            renderProjects();
+
+            // Charger les activités du projet sélectionné
+            if (id) {
+                await loadActivities(id);
+            } else {
+                activities = [];
+            }
+
+            renderCalendar();
+        }
+
+        function openProjectModal() {
+            editingProjectId = null;
+            document.getElementById('projectModalTitle').textContent = 'Nouveau voyage';
+            document.getElementById('projectName').value = '';
+            document.getElementById('projectDescription').value = '';
+            document.getElementById('projectTravelers').value = '';
+            document.getElementById('projectModal').classList.add('show');
+        }
+
+        function editProject(id) {
+            editingProjectId = id;
+            const project = projects.find(p => p.id === id);
+            document.getElementById('projectModalTitle').textContent = 'Modifier le voyage';
+            document.getElementById('projectName').value = project.name;
+            document.getElementById('projectDescription').value = project.description || '';
+            document.getElementById('projectTravelers').value = (project.travelers || []).join(', ');
+            document.getElementById('projectModal').classList.add('show');
+        }
+
+        function closeProjectModal() {
+            document.getElementById('projectModal').classList.remove('show');
+        }
+
+        async function saveProject() {
+            const name = document.getElementById('projectName').value.trim();
+            if (!name) return alert('Le nom est obligatoire');
+
+            const travelers = document.getElementById('projectTravelers').value
+                .split(',')
+                .map(t => t.trim())
+                .filter(t => t);
+
+            const projectData = {
+                name,
+                description: document.getElementById('projectDescription').value.trim(),
+                travelers
+            };
+
+            let result;
+
+            if (editingProjectId) {
+                // MISE À JOUR via Supabase
+                result = await updateProject(editingProjectId, projectData);
+            } else {
+                // CRÉATION via Supabase
+                result = await createProject(name, projectData.description, travelers);
+            }
+
+            if (result.success) {
+                await loadData();
+                renderProjects();
+                closeProjectModal();
+            } else {
+                alert('Erreur lors de la sauvegarde: ' + result.error);
+            }
+        }
+
+        async function deleteProjectFunc(id) {
+            if (projects.length === 1) {
+                alert('Vous ne pouvez pas supprimer votre dernier projet');
+                return;
+            }
+
+            const project = projects.find(p => p.id === id);
+            if (confirm(`Supprimer "${project.name}" et toutes ses activités ?`)) {
+                const result = await deleteProject(id);
+
+                if (result.success) {
+                    if (currentProject === id) {
+                        await loadData();
+                        currentProject = projects[0]?.id;
+                    } else {
+                        await loadData();
+                    }
+                    renderProjects();
+                    renderCalendar();
+                } else {
+                    alert('Erreur lors de la suppression: ' + result.error);
+                }
+            }
+        }
+
+        // Activities
+        function openActivityModal() {
+            editingActivity = null;
+            currentAttachments = [];
+            document.getElementById('modalTitle').textContent = 'Nouvelle activité';
+            document.getElementById('activityForm').reset();
+            
+            // Fix timezone issue: format date as YYYY-MM-DD without timezone conversion
+            const year = selectedDate.getFullYear();
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const day = String(selectedDate.getDate()).padStart(2, '0');
+            document.getElementById('activityDate').value = `${year}-${month}-${day}`;
+            
+            document.getElementById('deleteBtn').style.display = 'none';
+            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('[data-category="activite"]').classList.add('active');
+            document.getElementById('attachmentList').innerHTML = '';
+            document.getElementById('activityModal').classList.add('show');
+        }
+
+        function editActivity(id) {
+            editingActivity = activities.find(a => a.id === id);
+            currentAttachments = [...(editingActivity.attachments || [])];
+            
+            document.getElementById('modalTitle').textContent = 'Modifier l\'activité';
+            document.getElementById('activityTitle').value = editingActivity.title;
+            document.getElementById('activityDate').value = editingActivity.date;
+            document.getElementById('activityTime').value = editingActivity.time || '';
+            document.getElementById('activityDuration').value = editingActivity.duration || 1;
+            document.getElementById('activityTravelers').value = (editingActivity.travelers || []).join(', ');
+            document.getElementById('activityLocation').value = editingActivity.location || '';
+            document.getElementById('activityUrl').value = editingActivity.url || '';
+            document.getElementById('activityNotes').value = editingActivity.notes || '';
+            
+            selectCategory(editingActivity.category);
+            renderAttachmentsEnhanced();
+            
+            document.getElementById('deleteBtn').style.display = 'block';
+            document.getElementById('activityModal').classList.add('show');
+        }
+
+        function closeActivityModal() {
+            document.getElementById('activityModal').classList.remove('show');
+        }
+
+        function selectCategory(category) {
+            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-category="${category}"]`).classList.add('active');
+        }
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    currentAttachments.push({
+                        name: file.name,
+                        data: e.target.result,
+                        type: file.type
+                    });
+                    renderAttachmentsEnhanced();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function renderAttachments_OLD() {
+            const list = document.getElementById('attachmentList');
+            list.innerHTML = currentAttachments.map((att, idx) => `
+                <div class="attachment-item">
+                    <span class="attachment-icon">📎</span>
+                    <span class="attachment-name">${att.name}</span>
+                    <button class="attachment-remove" onclick="removeAttachment(${idx})">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function removeAttachment(index) {
+            currentAttachments.splice(index, 1);
+            renderAttachmentsEnhanced();
+        }
+
+        async function saveActivity() {
+            const title = document.getElementById('activityTitle').value.trim();
+            const date = document.getElementById('activityDate').value;
+
+            if (!title || !date) {
+                alert('Le titre et la date sont obligatoires');
+                return;
+            }
+
+            const category = document.querySelector('.category-btn.active').dataset.category;
+            const travelers = document.getElementById('activityTravelers').value
+                .split(',')
+                .map(t => t.trim())
+                .filter(t => t);
+
+            const activityData = {
+                project_id: currentProject,
+                title,
+                date,
+                time: document.getElementById('activityTime').value || null,
+                duration: parseFloat(document.getElementById('activityDuration').value) || 1,
+                category,
+                travelers,
+                location: document.getElementById('activityLocation').value.trim(),
+                url: document.getElementById('activityUrl').value.trim(),
+                notes: document.getElementById('activityNotes').value.trim(),
+                attachments: currentAttachments.length > 0 ? currentAttachments : null
+            };
+
+            let result;
+
+            if (editingActivity) {
+                // MISE À JOUR via Supabase
+                result = await updateActivity(editingActivity.id, activityData);
+            } else {
+                // CRÉATION via Supabase
+                result = await createActivity(activityData);
+            }
+
+            if (result.success) {
+                // Recharger les activités depuis Supabase
+                await loadData();
+                renderCalendar();
+
+                // Refresh planning view if active
+                if (currentView === 'planning') {
+                    renderPlanningView();
+                }
+                closeActivityModal();
+            } else {
+                alert('Erreur lors de la sauvegarde: ' + result.error);
+            }
+        }
+
+        async function deleteCurrentActivity() {
+            if (confirm('Supprimer cette activité ?')) {
+                const result = await deleteActivity(editingActivity.id);
+
+                if (result.success) {
+                    await loadData();
+                    renderCalendar();
+                    if (currentView === 'planning') {
+                        renderPlanningView();
+                    }
+                    closeActivityModal();
+                } else {
+                    alert('Erreur lors de la suppression: ' + result.error);
+                }
+            }
+        }
+
+        
+        // ============================
+        // PLANNING VIEW
+        // ============================
+        let currentView = 'timeline';
+        let currentDisplayYear = new Date().getFullYear();
+        
+        function switchView(view) {
+            currentView = view;
+            
+            // Update tabs
+            document.querySelectorAll('.view-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.view-tab').forEach(tab => {
+                if ((view === 'timeline' && tab.textContent.includes('Calendrier')) ||
+                    (view === 'planning' && tab.textContent.includes('Planning'))) {
+                    tab.classList.add('active');
+                }
+            });
+            
+            // Show/hide views and header elements
+            const sidebarContent = document.querySelector('.sidebar-content');
+            const timelineContainer = document.getElementById('timelineContainer');
+            const planningView = document.getElementById('planningView');
+            const contentTitle = document.getElementById('contentTitle');
+            const contentSubtitle = document.getElementById('contentSubtitle');
+            
+            if (view === 'timeline') {
+                // Show timeline view
+                if (timelineContainer) timelineContainer.style.display = 'block';
+                if (planningView) planningView.style.display = 'none';
+                // Show calendar header
+                if (contentTitle) contentTitle.style.display = 'block';
+                if (contentSubtitle) contentSubtitle.style.display = 'block';
+                // Show sidebar content
+                if (sidebarContent) sidebarContent.style.display = 'block';
+            } else {
+                // Show planning view
+                if (timelineContainer) timelineContainer.style.display = 'none';
+                if (planningView) planningView.style.display = 'block';
+                // Hide calendar header
+                if (contentTitle) contentTitle.style.display = 'none';
+                if (contentSubtitle) contentSubtitle.style.display = 'none';
+                // Hide sidebar content (mini calendar)
+                if (sidebarContent) sidebarContent.style.display = 'none';
+                renderPlanningView();
+            }
+        }
+        
+        function getWeekStart(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is sunday
+            return new Date(d.setDate(diff));
+        }
+        
+        
+        function renderPlanningView() {
+            // Use the current display year
+            const yearToDisplay = currentDisplayYear;
+            
+            // Update year display
+            document.getElementById('currentYearDisplay').textContent = yearToDisplay;
+            
+            // Generate ALL weeks of the year (52-53 weeks)
+            const firstDayOfYear = new Date(yearToDisplay, 0, 1);
+            const lastDayOfYear = new Date(yearToDisplay, 11, 31);
+            
+            const firstWeekStart = getWeekStart(firstDayOfYear);
+            const lastWeekStart = getWeekStart(lastDayOfYear);
+            
+            // Generate all weeks
+            const weeks = [];
+            let currentWeek = new Date(firstWeekStart);
+            
+            while (currentWeek <= lastWeekStart) {
+                weeks.push(new Date(currentWeek));
+                currentWeek.setDate(currentWeek.getDate() + 7);
+            }
+            
+            console.log(`Rendering ${weeks.length} weeks for year ${yearToDisplay}`);
+            
+            // Load saved regions (now per day instead of per week)
+            const savedRegions = JSON.parse(localStorage.getItem(`${getStorageKey()}_regions`) || '{}');
+            
+            // Get all project activities
+            const projectActivities = activities.filter(a => a.projectId === currentProject);
+            
+            // Render all weeks
+            const weeksHTML = weeks.map(weekStart => {
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekEnd.getDate() + 6);
+                
+                const monthNames = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+                const weekNumber = getWeekNumber(weekStart);
+                
+                let weekTitle;
+                if (weekStart.getMonth() === weekEnd.getMonth()) {
+                    weekTitle = `${weekStart.getDate()} - ${weekEnd.getDate()} ${monthNames[weekStart.getMonth()]} ${weekStart.getFullYear()}`;
+                } else if (weekStart.getFullYear() === weekEnd.getFullYear()) {
+                    weekTitle = `${weekStart.getDate()} ${monthNames[weekStart.getMonth()]} - ${weekEnd.getDate()} ${monthNames[weekEnd.getMonth()]} ${weekStart.getFullYear()}`;
+                } else {
+                    weekTitle = `${weekStart.getDate()} ${monthNames[weekStart.getMonth()]} ${weekStart.getFullYear()} - ${weekEnd.getDate()} ${monthNames[weekEnd.getMonth()]} ${weekEnd.getFullYear()}`;
+                }
+                
+                // Check if this is the current week
+                const today = new Date();
+                const isCurrentWeek = weekStart <= today && weekEnd >= today;
+                
+                // Generate days
+                const daysHTML = Array.from({length: 7}, (_, i) => {
+                    const date = new Date(weekStart);
+                    date.setDate(date.getDate() + i);
+                    
+                    const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+                    const dayName = dayNames[date.getDay()];
+                    const dayNumber = date.getDate();
+                    
+                    // Check if today
+                    const isToday = date.toDateString() === today.toDateString();
+                    
+                    // Create region key per day (format: YYYY-MM-DD)
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const dayKey = `${year}-${month}-${day}`;
+                    const savedRegion = savedRegions[dayKey] || '';
+                    
+                    // Get activities for this day
+                    const dayActivities = projectActivities.filter(a => isSameDay(a.date, date));
+                    dayActivities.sort((a, b) => (a.time || '00:00').localeCompare(b.time || '00:00'));
+                    
+                    const activitiesHTML = dayActivities.length === 0 
+                        ? '<div class="planning-empty">-</div>'
+                        : dayActivities.map(a => renderPlanningActivity(a)).join('');
+                    
+                    return `
+                        <div class="day-column">
+                            <div class="day-header">
+                                <div class="day-name">${dayName}</div>
+                                <div class="day-number ${isToday ? 'today' : ''}">${dayNumber}</div>
+                                <input 
+                                    type="text" 
+                                    class="day-region-input" 
+                                    placeholder="📍 Lieu..." 
+                                    value="${savedRegion}"
+                                    onchange="saveDayRegion('${dayKey}', this.value)"
+                                >
+                            </div>
+                            <div class="day-content">
+                                ${activitiesHTML}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                return `
+                    <div class="week-card" id="week-${weekNumber}" ${isCurrentWeek ? 'data-current-week="true"' : ''}>
+                        <div class="week-card-header">
+                            <div class="week-title">
+                                <span>📅</span>
+                                <span>${weekTitle}</span>
+                            </div>
+                            <span class="week-number-badge">S${weekNumber}</span>
+                        </div>
+                        <div class="week-days-grid">
+                            ${daysHTML}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('weeksContainer').innerHTML = weeksHTML;
+            
+            // Smart scroll logic based on activities
+            setTimeout(() => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Reset time for comparison
+                
+                let targetWeek = null;
+                
+                if (projectActivities.length > 0) {
+                    // Find first activity date
+                    const dates = projectActivities.map(a => {
+                        const d = new Date(a.date);
+                        d.setHours(0, 0, 0, 0);
+                        return d;
+                    });
+                    const firstActivityDate = new Date(Math.min(...dates));
+                    
+                    // Compare today with first activity
+                    if (today < firstActivityDate) {
+                        // Aujourd'hui est AVANT le premier record → scroll à la première semaine avec activité
+                        const firstWeekStart = getWeekStart(firstActivityDate);
+                        const firstWeekNumber = getWeekNumber(firstWeekStart);
+                        targetWeek = document.getElementById(`week-${firstWeekNumber}`);
+                        console.log('Today is before first activity, scrolling to first activity week:', firstWeekNumber);
+                    } else {
+                        // Aujourd'hui est APRÈS ou ÉGAL au premier record → scroll à la semaine courante
+                        targetWeek = document.querySelector('[data-current-week="true"]');
+                        console.log('Today is after or equal to first activity, scrolling to current week');
+                    }
+                } else {
+                    // Pas d'activités → scroll à la semaine courante
+                    targetWeek = document.querySelector('[data-current-week="true"]');
+                    console.log('No activities, scrolling to current week');
+                }
+                
+                if (targetWeek) {
+                    targetWeek.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 100);
+        }
+        
+        function saveDayRegion(dayKey, value) {
+            const savedRegions = JSON.parse(localStorage.getItem(`${getStorageKey()}_regions`) || '{}');
+            const region = value.trim();
+            
+            if (region) {
+                savedRegions[dayKey] = region;
+            } else {
+                delete savedRegions[dayKey];
+            }
+            localStorage.setItem(`${getStorageKey()}_regions`, JSON.stringify(savedRegions));
+        }
+        
+        function getWeekNumber(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        }
+        
+        function changeYear(delta) {
+            currentDisplayYear += delta;
+            renderPlanningView();
+            // Scroll to top of planning
+            document.getElementById('planningView').scrollTop = 0;
+        }
+        
+        function renderPlanningActivity(activity) {
+            const cat = CATEGORIES[activity.category];
+            const time = activity.time ? activity.time.substring(0, 5) : '';
+            
+            return `
+                <div class="planning-activity ${activity.category}" onclick="editActivity('${activity.id}')">
+                    <div class="planning-activity-title">
+                        <span>${cat.icon}</span>
+                        <span>${activity.title}</span>
+                    </div>
+                    ${time ? `<div class="planning-activity-time">${time}</div>` : ''}
+                    ${activity.location ? `<div class="planning-activity-location">${activity.location}</div>` : ''}
+                </div>
+            `;
+        }
+        
+        
+        function renderAttachmentsEnhanced() {
+            const list = document.getElementById('attachmentList');
+            list.innerHTML = currentAttachments.map((att, idx) => {
+                const icon = att.type && att.type.startsWith('image/') ? '🖼️' : (att.type === 'application/pdf' ? '📄' : '📎');
+                const size = att.size ? formatFileSize(att.size) : '';
+
+                return `
+                    <div class="attachment-item">
+                        <span class="attachment-icon">${icon}</span>
+                        <span class="attachment-name">${att.name}</span>
+                        ${size ? `<span class="attachment-size">${size}</span>` : ''}
+                        <button class="attachment-remove" onclick="removeAttachment(${idx})">✕</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function handleFilesWithValidation(files) {
+            const validation = validateFiles(files);
+
+            if (!validation.valid) {
+                alert('❌ Erreurs de validation :\n\n' + validation.errors.join('\n\n'));
+                document.getElementById('fileInput').value = '';
+                return;
+            }
+
+            validation.validFiles.forEach(file => {
+                const reader = new FileReader();
+
+                reader.onload = (e) => {
+                    currentAttachments.push({
+                        name: file.name,
+                        data: e.target.result,
+                        type: file.type,
+                        size: file.size,
+                        file: file
+                    });
+                    renderAttachmentsEnhanced();
+                };
+
+                reader.readAsDataURL(file);
+            });
+
+            document.getElementById('fileInput').value = '';
+
+            if (validation.validFiles.length > 0) {
+                console.log(`✅ ${validation.validFiles.length} fichier(s) ajouté(s)`);
+            }
+        }
+
+
+        // ============================================
+        // INITIALISATION AU CHARGEMENT
+        // ============================================
+
+        async function initApp() {
+            const result = await checkSession();
+
+            if (result.success) {
+                currentUser = result.user;
+                showApp();
+            } else {
+                // Afficher l'écran de login
+                document.getElementById('loginScreen').style.display = 'flex';
+            }
+        }
+
+        // Démarrer l'app quand la page est chargée
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
