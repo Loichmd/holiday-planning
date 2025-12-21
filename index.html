@@ -2614,7 +2614,7 @@
             // Group activities by date
             const activitiesByDate = {};
             projectActivities.forEach(activity => {
-                const dateKey = activity.date.toISOString().split('T')[0];
+                const dateKey = activity.date; // activity.date is already a string "YYYY-MM-DD"
                 if (!activitiesByDate[dateKey]) {
                     activitiesByDate[dateKey] = [];
                 }
