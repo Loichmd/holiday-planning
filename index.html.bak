@@ -1413,14 +1413,8 @@
                         📊 Planning Hebdomadaire
                     </button>
                 </div>
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 16px;">
-                    <button class="nav-btn" onclick="previousDay()" title="Jour précédent">‹</button>
-                    <div style="flex: 1; text-align: center;">
-                        <h2 class="content-title" id="contentTitle" style="margin: 0;">Aujourd'hui</h2>
-                        <p class="content-subtitle" id="contentSubtitle" style="margin: 0;">Aucune activité prévue</p>
-                    </div>
-                    <button class="nav-btn" onclick="nextDay()" title="Jour suivant">›</button>
-                </div>
+                <h2 class="content-title" id="contentTitle">Aujourd'hui</h2>
+                <p class="content-subtitle" id="contentSubtitle">Aucune activité prévue</p>
             </div>
             
             <div class="events-container" id="timelineContainer">
@@ -2667,6 +2661,172 @@
         // ============================================
         // ATTACHMENTS & FILE HANDLING
         // ============================================
+                
+                const monthNames = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+                const weekNumber = getWeekNumber(weekStart);
+                
+                let weekTitle;
+                if (weekStart.getMonth() === weekEnd.getMonth()) {
+                    weekTitle = `${weekStart.getDate()} - ${weekEnd.getDate()} ${monthNames[weekStart.getMonth()]} ${weekStart.getFullYear()}`;
+                } else if (weekStart.getFullYear() === weekEnd.getFullYear()) {
+                    weekTitle = `${weekStart.getDate()} ${monthNames[weekStart.getMonth()]} - ${weekEnd.getDate()} ${monthNames[weekEnd.getMonth()]} ${weekStart.getFullYear()}`;
+                } else {
+                    weekTitle = `${weekStart.getDate()} ${monthNames[weekStart.getMonth()]} ${weekStart.getFullYear()} - ${weekEnd.getDate()} ${monthNames[weekEnd.getMonth()]} ${weekEnd.getFullYear()}`;
+                }
+                
+                // Check if this is the current week
+                const today = new Date();
+                const isCurrentWeek = weekStart <= today && weekEnd >= today;
+                
+                // Generate days
+                const daysHTML = Array.from({length: 7}, (_, i) => {
+                    const date = new Date(weekStart);
+                    date.setDate(date.getDate() + i);
+                    
+                    const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+                    const dayName = dayNames[date.getDay()];
+                    const dayNumber = date.getDate();
+                    
+                    // Check if today
+                    const isToday = date.toDateString() === today.toDateString();
+                    
+                    // Create region key per day (format: YYYY-MM-DD)
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const dayKey = `${year}-${month}-${day}`;
+                    const savedRegion = savedRegions[dayKey] || '';
+                    
+                    // Get activities for this day
+                    const dayActivities = projectActivities.filter(a => isSameDay(a.date, date));
+                    dayActivities.sort((a, b) => (a.time || '00:00').localeCompare(b.time || '00:00'));
+                    
+                    const activitiesHTML = dayActivities.length === 0 
+                        ? '<div class="planning-empty">-</div>'
+                        : dayActivities.map(a => renderPlanningActivity(a)).join('');
+                    
+                    return `
+                        <div class="day-column">
+                            <div class="day-header">
+                                <div class="day-name">${dayName}</div>
+                                <div class="day-number ${isToday ? 'today' : ''}">${dayNumber}</div>
+                                <input 
+                                    type="text" 
+                                    class="day-region-input" 
+                                    placeholder="📍 Lieu..." 
+                                    value="${savedRegion}"
+                                    onchange="saveDayRegion('${dayKey}', this.value)"
+                                >
+                            </div>
+                            <div class="day-content">
+                                ${activitiesHTML}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                return `
+                    <div class="week-card" id="week-${weekNumber}" ${isCurrentWeek ? 'data-current-week="true"' : ''}>
+                        <div class="week-card-header">
+                            <div class="week-title">
+                                <span>📅</span>
+                                <span>${weekTitle}</span>
+                            </div>
+                            <span class="week-number-badge">S${weekNumber}</span>
+                        </div>
+                        <div class="week-days-grid">
+                            ${daysHTML}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('weeksContainer').innerHTML = weeksHTML;
+            
+            // Smart scroll logic based on activities
+            setTimeout(() => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Reset time for comparison
+                
+                let targetWeek = null;
+                
+                if (projectActivities.length > 0) {
+                    // Find first activity date
+                    const dates = projectActivities.map(a => {
+                        const d = new Date(a.date);
+                        d.setHours(0, 0, 0, 0);
+                        return d;
+                    });
+                    const firstActivityDate = new Date(Math.min(...dates));
+                    
+                    // Compare today with first activity
+                    if (today < firstActivityDate) {
+                        // Aujourd'hui est AVANT le premier record → scroll à la première semaine avec activité
+                        const firstWeekStart = getWeekStart(firstActivityDate);
+                        const firstWeekNumber = getWeekNumber(firstWeekStart);
+                        targetWeek = document.getElementById(`week-${firstWeekNumber}`);
+                        console.log('Today is before first activity, scrolling to first activity week:', firstWeekNumber);
+                    } else {
+                        // Aujourd'hui est APRÈS ou ÉGAL au premier record → scroll à la semaine courante
+                        targetWeek = document.querySelector('[data-current-week="true"]');
+                        console.log('Today is after or equal to first activity, scrolling to current week');
+                    }
+                } else {
+                    // Pas d'activités → scroll à la semaine courante
+                    targetWeek = document.querySelector('[data-current-week="true"]');
+                    console.log('No activities, scrolling to current week');
+                }
+                
+                if (targetWeek) {
+                    targetWeek.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 100);
+        }
+        
+        function saveDayRegion(dayKey, value) {
+            const savedRegions = JSON.parse(localStorage.getItem(`${getStorageKey()}_regions`) || '{}');
+            const region = value.trim();
+            
+            if (region) {
+                savedRegions[dayKey] = region;
+            } else {
+                delete savedRegions[dayKey];
+            }
+            localStorage.setItem(`${getStorageKey()}_regions`, JSON.stringify(savedRegions));
+        }
+        
+        function getWeekNumber(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        }
+        
+        function changeYear(delta) {
+            currentDisplayYear += delta;
+            renderPlanningView();
+            // Scroll to top of planning
+            document.getElementById('planningView').scrollTop = 0;
+        }
+        
+        function renderPlanningActivity(activity) {
+            const cat = CATEGORIES[activity.category];
+            const time = activity.time ? activity.time.substring(0, 5) : '';
+            
+            return `
+                <div class="planning-activity ${activity.category}" onclick="editActivity('${activity.id}')">
+                    <div class="planning-activity-title">
+                        <span>${cat.icon}</span>
+                        <span>${activity.title}</span>
+                    </div>
+                    ${time ? `<div class="planning-activity-time">${time}</div>` : ''}
+                    ${activity.location ? `<div class="planning-activity-location">${activity.location}</div>` : ''}
+                </div>
+            `;
+        }
+        
+        
         function renderAttachmentsEnhanced() {
             const list = document.getElementById('attachmentList');
             list.innerHTML = currentAttachments.map((att, idx) => {
