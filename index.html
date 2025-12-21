@@ -1502,7 +1502,7 @@
     <script src="file-validation.js"></script>
 
     <!-- Intégration Supabase -->
-    <script src="app-supabase.js?v=5"></script>
+    <script src="app-supabase.js?v=6"></script>
 
     <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
     <script>
@@ -2118,10 +2118,18 @@
             document.getElementById('projectDropdown').classList.toggle('show');
         }
 
-        function selectProject(id) {
+        async function selectProject(id) {
             currentProject = id;
             toggleProjectDropdown();
             renderProjects();
+
+            // Charger les activités du projet sélectionné
+            if (id) {
+                await loadActivities(id);
+            } else {
+                activities = [];
+            }
+
             renderCalendar();
         }
 
