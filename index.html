@@ -2341,7 +2341,12 @@
                 activities = [];
             }
 
-            renderCalendar();
+            // Re-render the current view
+            if (currentView === 'planning') {
+                await renderPlanningView();
+            } else {
+                renderCalendar();
+            }
         }
 
         function openProjectModal() {
