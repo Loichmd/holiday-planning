@@ -1112,6 +1112,9 @@
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             border-left: 4px solid #228be6;
             box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
         }
         .activity-card-trello:hover {
             background: #f8f9fa;
@@ -2820,7 +2823,7 @@
                      draggable="true"
                      ondragstart="handleDragStart(event)"
                      ondragend="handleDragEnd(event)"
-                     onclick="editActivity('${activity.id}')">
+                     onclick="if(!isDragging) editActivity('${activity.id}')">
                     ${time ? `<div class="activity-card-time">${time}</div>` : ''}
                     <div class="activity-card-title">
                         <span>${cat.icon}</span>
@@ -2843,20 +2846,39 @@
 
         let draggedActivityId = null;
         let draggedElement = null;
+        let isDragging = false;
 
         function handleDragStart(event) {
             draggedActivityId = event.currentTarget.dataset.activityId;
             draggedElement = event.currentTarget;
+            isDragging = true;
+
             event.currentTarget.classList.add('dragging');
             event.dataTransfer.effectAllowed = 'move';
+
+            // Disable onclick during drag
+            event.currentTarget.onclick = null;
+
+            // Add small delay to prevent accidental clicks
+            setTimeout(() => {
+                isDragging = true;
+            }, 100);
         }
 
         function handleDragEnd(event) {
             event.currentTarget.classList.remove('dragging');
+
             // Remove all drag-over highlights
             document.querySelectorAll('.day-cards-list').forEach(list => {
                 list.classList.remove('drag-over');
             });
+
+            // Reset dragging state after delay
+            setTimeout(() => {
+                isDragging = false;
+                draggedActivityId = null;
+                draggedElement = null;
+            }, 100);
         }
 
         function handleDragOver(event) {
@@ -2866,10 +2888,19 @@
             const cardsList = event.currentTarget;
             const afterElement = getDragAfterElement(cardsList, event.clientY);
 
+            // Don't manipulate DOM if element would stay in same position
+            const currentNext = draggedElement.nextElementSibling;
+
             if (afterElement == null) {
-                cardsList.appendChild(draggedElement);
+                // Append to end
+                if (currentNext !== null) {
+                    cardsList.appendChild(draggedElement);
+                }
             } else {
-                cardsList.insertBefore(draggedElement, afterElement);
+                // Insert before afterElement
+                if (afterElement !== draggedElement && afterElement !== currentNext) {
+                    cardsList.insertBefore(draggedElement, afterElement);
+                }
             }
         }
 
@@ -2887,6 +2918,7 @@
 
         async function handleDrop(event) {
             event.preventDefault();
+            event.stopPropagation();
             event.currentTarget.classList.remove('drag-over');
 
             if (!draggedActivityId) return;
@@ -2899,30 +2931,36 @@
             const cards = Array.from(dropZone.querySelectorAll('.activity-card-trello'));
             const newIndex = cards.findIndex(card => card.dataset.activityId === draggedActivityId);
 
+            if (newIndex === -1) return;
+
             // Find the activity
             const activity = activities.find(a => a.id === draggedActivityId);
             if (!activity) return;
 
             const oldDate = activity.date;
+            const oldTime = activity.time;
 
             // Calculate new time based on position
             const newTime = calculateTimeFromPosition(newIndex, cards.length);
 
-            // Update activity
-            activity.date = newDateKey;
-            activity.time = newTime;
+            // Only update if something changed
+            if (oldDate !== newDateKey || oldTime !== newTime) {
+                // Update activity
+                activity.date = newDateKey;
+                activity.time = newTime;
 
-            // Save to Supabase
-            await updateActivity(draggedActivityId, {
-                date: newDateKey,
-                time: newTime
-            });
+                // Save to Supabase
+                await updateActivity(draggedActivityId, {
+                    date: newDateKey,
+                    time: newTime
+                });
 
-            // Re-render
-            await renderPlanningView();
+                // Re-render
+                await renderPlanningView();
+            }
 
-            draggedActivityId = null;
-            draggedElement = null;
+            // Reset state
+            isDragging = false;
         }
 
         function getDragAfterElement(container, y) {
