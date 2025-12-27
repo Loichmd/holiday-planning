@@ -1538,10 +1538,20 @@
     }
     .map-view {
         height: calc(100vh - 180px);
+        display: flex;
+        flex-direction: column;
+    }
+    .map-container {
+        flex: 1;
+        position: relative;
     }
     .day-selector {
-        top: 76px; /* Below the header */
-        z-index: 1000; /* Keep high z-index to be above map */
+        position: relative; /* Change from absolute to relative on desktop */
+        top: 0; /* Reset top */
+        z-index: 1000; /* Keep high z-index */
+        padding: 16px; /* Add padding */
+        background: white; /* Add background */
+        border-bottom: 1px solid #e5e7eb; /* Add separator */
     }
     /* Increase header z-index on desktop to be above day-selector */
     .map-header {
