@@ -1142,6 +1142,43 @@
             border-radius: 8px;
         }
 
+        /* Drag placeholder */
+        .drag-placeholder {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+            border: 2px dashed #6366F1;
+            border-radius: 12px;
+            margin: 8px 0;
+            transition: all 0.2s ease;
+        }
+
+        /* Add activity inline button */
+        .add-activity-inline {
+            width: 100%;
+            padding: 8px 12px;
+            margin: 6px 0;
+            background: transparent;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            color: #868e96;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .add-activity-inline:hover {
+            background: rgba(34, 139, 230, 0.05);
+            border-color: #228be6;
+            color: #228be6;
+            transform: scale(1.02);
+        }
+        .add-activity-inline:active {
+            transform: scale(0.98);
+        }
+
         .activity-card-time {
             font-size: 11px;
             font-weight: 700;
@@ -2789,7 +2826,29 @@
                 const dayLabel = customization.label || `Jour ${dayNumber}`;
                 const autoLocation = customization.location || (dayActivities[0]?.location ? dayActivities[0].location.split(',')[0] : '');
 
-                const cardsHTML = dayActivities.map(activity => renderActivityCardTrello(activity)).join('');
+                // Generate cards with "+" buttons between them
+                const cardsWithButtons = [];
+
+                // Add "+" button at the top
+                const firstTime = dayActivities.length > 0 && dayActivities[0].time
+                    ? calculateTimeBefore(dayActivities[0].time)
+                    : '09:00';
+                cardsWithButtons.push(`<button class="add-activity-inline" onclick="addActivityAtPosition('${dateKey}', '${firstTime}', 0)" title="Ajouter une activité">+ Ajouter une activité</button>`);
+
+                // Add cards with "+" buttons between them
+                dayActivities.forEach((activity, idx) => {
+                    cardsWithButtons.push(renderActivityCardTrello(activity));
+
+                    // Add "+" button after each card (except the last one)
+                    if (idx < dayActivities.length - 1) {
+                        const currentTime = activity.time || '09:00';
+                        const nextTime = dayActivities[idx + 1].time || '18:00';
+                        const middleTime = calculateMiddleTime(currentTime, nextTime);
+                        cardsWithButtons.push(`<button class="add-activity-inline" onclick="addActivityAtPosition('${dateKey}', '${middleTime}', ${idx + 1})" title="Ajouter une activité">+</button>`);
+                    }
+                });
+
+                const cardsHTML = cardsWithButtons.join('');
 
                 return `
                     <div class="day-column-trello" data-date="${dateKey}">
@@ -2847,6 +2906,7 @@
         let draggedActivityId = null;
         let draggedElement = null;
         let isDragging = false;
+        let placeholder = null;
 
         function handleDragStart(event) {
             draggedActivityId = event.currentTarget.dataset.activityId;
@@ -2856,26 +2916,44 @@
             event.currentTarget.classList.add('dragging');
             event.dataTransfer.effectAllowed = 'move';
 
+            // Create placeholder
+            placeholder = document.createElement('div');
+            placeholder.className = 'drag-placeholder';
+            placeholder.style.height = draggedElement.offsetHeight + 'px';
+
             // Disable onclick during drag
             event.currentTarget.onclick = null;
 
-            // Add small delay to prevent accidental clicks
             setTimeout(() => {
                 isDragging = true;
-            }, 100);
+            }, 50);
         }
 
         function handleDragEnd(event) {
             event.currentTarget.classList.remove('dragging');
+
+            // Remove placeholder
+            if (placeholder && placeholder.parentNode) {
+                placeholder.parentNode.removeChild(placeholder);
+            }
+            placeholder = null;
 
             // Remove all drag-over highlights
             document.querySelectorAll('.day-cards-list').forEach(list => {
                 list.classList.remove('drag-over');
             });
 
-            // Reset dragging state after delay
+            // Reset dragging state
             setTimeout(() => {
                 isDragging = false;
+                // Re-enable onclick
+                if (draggedElement) {
+                    draggedElement.onclick = function() {
+                        if (!isDragging) {
+                            editActivity(draggedElement.dataset.activityId);
+                        }
+                    };
+                }
                 draggedActivityId = null;
                 draggedElement = null;
             }, 100);
@@ -2885,22 +2963,16 @@
             event.preventDefault();
             event.dataTransfer.dropEffect = 'move';
 
+            if (!draggedElement || !placeholder) return;
+
             const cardsList = event.currentTarget;
             const afterElement = getDragAfterElement(cardsList, event.clientY);
 
-            // Don't manipulate DOM if element would stay in same position
-            const currentNext = draggedElement.nextElementSibling;
-
+            // Insert placeholder to show where the card will drop
             if (afterElement == null) {
-                // Append to end
-                if (currentNext !== null) {
-                    cardsList.appendChild(draggedElement);
-                }
+                cardsList.appendChild(placeholder);
             } else {
-                // Insert before afterElement
-                if (afterElement !== draggedElement && afterElement !== currentNext) {
-                    cardsList.insertBefore(draggedElement, afterElement);
-                }
+                cardsList.insertBefore(placeholder, afterElement);
             }
         }
 
@@ -2911,7 +2983,8 @@
         }
 
         function handleDragLeave(event) {
-            if (event.currentTarget === event.target) {
+            // Only remove highlight if we're leaving the container itself
+            if (event.currentTarget === event.target || !event.currentTarget.contains(event.relatedTarget)) {
                 event.currentTarget.classList.remove('drag-over');
             }
         }
@@ -2921,17 +2994,11 @@
             event.stopPropagation();
             event.currentTarget.classList.remove('drag-over');
 
-            if (!draggedActivityId) return;
+            if (!draggedActivityId || !placeholder) return;
 
             const dropZone = event.currentTarget;
             const dayColumn = dropZone.closest('.day-column-trello');
             const newDateKey = dayColumn.dataset.date;
-
-            // Get the new position in the list
-            const cards = Array.from(dropZone.querySelectorAll('.activity-card-trello'));
-            const newIndex = cards.findIndex(card => card.dataset.activityId === draggedActivityId);
-
-            if (newIndex === -1) return;
 
             // Find the activity
             const activity = activities.find(a => a.id === draggedActivityId);
@@ -2940,8 +3007,20 @@
             const oldDate = activity.date;
             const oldTime = activity.time;
 
+            // Get position based on placeholder
+            const allCards = Array.from(dropZone.children);
+            const placeholderIndex = allCards.indexOf(placeholder);
+
+            // Count only activity cards before placeholder
+            const cardsBeforePlaceholder = allCards.slice(0, placeholderIndex)
+                .filter(el => el.classList.contains('activity-card-trello'));
+            const newIndex = cardsBeforePlaceholder.length;
+
+            // Get total number of cards in this day (including the one being moved)
+            const totalCards = dropZone.querySelectorAll('.activity-card-trello').length;
+
             // Calculate new time based on position
-            const newTime = calculateTimeFromPosition(newIndex, cards.length);
+            const newTime = calculateTimeFromPosition(newIndex, totalCards);
 
             // Only update if something changed
             if (oldDate !== newDateKey || oldTime !== newTime) {
@@ -2958,9 +3037,6 @@
                 // Re-render
                 await renderPlanningView();
             }
-
-            // Reset state
-            isDragging = false;
         }
 
         function getDragAfterElement(container, y) {
@@ -2996,6 +3072,48 @@
             const minutes = Math.round((newHour - hours) * 60);
 
             return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        }
+
+        // Calculate middle time between two times
+        function calculateMiddleTime(time1, time2) {
+            const [h1, m1] = time1.split(':').map(Number);
+            const [h2, m2] = time2.split(':').map(Number);
+
+            const minutes1 = h1 * 60 + m1;
+            const minutes2 = h2 * 60 + m2;
+            const middleMinutes = Math.floor((minutes1 + minutes2) / 2);
+
+            const hours = Math.floor(middleMinutes / 60);
+            const minutes = middleMinutes % 60;
+
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        }
+
+        // Calculate time 1 hour before
+        function calculateTimeBefore(time) {
+            const [h, m] = time.split(':').map(Number);
+            let newHour = h - 1;
+            if (newHour < 0) newHour = 0;
+
+            return `${String(newHour).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        }
+
+        // Add activity at a specific position in the day
+        function addActivityAtPosition(dateKey, time, position) {
+            // Pre-fill the form with date and time
+            currentEditingActivity = null;
+
+            // Show the modal
+            document.getElementById('activityModal').classList.add('show');
+
+            // Pre-fill date and time
+            document.getElementById('activityDate').value = dateKey;
+            document.getElementById('activityTime').value = time;
+
+            // Focus on title field
+            setTimeout(() => {
+                document.getElementById('activityTitle').focus();
+            }, 100);
         }
 
         // Utility function for week number (kept for potential future use)
