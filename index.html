@@ -1578,6 +1578,7 @@
         right: auto;
         bottom: auto;
         height: auto;
+        min-height: 500px;
     }
 }
 
@@ -3180,7 +3181,15 @@
 
                     // Géocoder si nouveau lieu ou lieu modifié
                     if (!editingActivity || oldLocation !== location) {
-                        await geocodeActivity(activityId, location);
+                        console.log('Géocodage:', location);
+                        const geocodeResult = await geocodeActivity(activityId, location);
+                        if (geocodeResult.success) {
+                            console.log('✅ Géocodé:', geocodeResult.coordinates);
+                        } else {
+                            console.error('❌ Erreur géocodage:', geocodeResult.error);
+                        }
+                    } else {
+                        console.log('Lieu inchangé, pas de géocodage');
                     }
                 }
 
