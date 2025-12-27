@@ -1528,6 +1528,8 @@
     border-bottom: 1px solid #e5e7eb;
     justify-content: space-between;
     align-items: center;
+    position: relative;
+    z-index: 1100;
 }
 
 @media (min-width: 768px) {
@@ -1539,6 +1541,7 @@
     }
     .day-selector {
         top: 76px; /* Below the header */
+        z-index: 500; /* Lower than header */
     }
 }
 
@@ -3140,6 +3143,18 @@
             }
 
             if (result.success) {
+                // Si on a édité et changé le lieu, ou créé avec un lieu, géocoder
+                const location = document.getElementById('activityLocation').value.trim();
+                if (location) {
+                    const activityId = editingActivity ? editingActivity.id : result.activity.id;
+                    const oldLocation = editingActivity ? editingActivity.location : null;
+
+                    // Géocoder si nouveau lieu ou lieu modifié
+                    if (!editingActivity || oldLocation !== location) {
+                        await geocodeActivity(activityId, location);
+                    }
+                }
+
                 // Recharger les activités depuis Supabase
                 await loadData();
                 renderCalendar();
@@ -3148,6 +3163,12 @@
                 if (currentView === 'planning') {
                     renderPlanningView();
                 }
+
+                // Refresh map view if active
+                if (currentView === 'map') {
+                    renderDaySelector();
+                }
+
                 closeActivityModal();
             } else {
                 alert('Erreur lors de la sauvegarde: ' + result.error);
