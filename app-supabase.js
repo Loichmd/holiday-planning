@@ -631,7 +631,7 @@ async function saveDayCustomization(projectId, dateKey, { label, location }) {
  * @param {string} address - Adresse à géocoder
  * @returns {Promise<{success: boolean, coordinates?: {lat: number, lng: number}, error?: string}>}
  */
-async function geocodeAddress(address) {
+async function geocodeAddress(address, returnMultiple = false) {
     if (!address || address.trim() === '') {
         return { success: false, error: 'Adresse vide' };
     }
@@ -642,8 +642,10 @@ async function geocodeAddress(address) {
 
         // Appel API Nominatim (OpenStreetMap)
         // User-Agent requis par Nominatim
+        // Demander 5 résultats pour pouvoir choisir
+        const limit = returnMultiple ? 5 : 1;
         const response = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=1`,
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=${limit}&addressdetails=1`,
             {
                 headers: {
                     'User-Agent': 'HolidayPlanningApp/1.0'
@@ -658,12 +660,29 @@ async function geocodeAddress(address) {
         const data = await response.json();
 
         if (data && data.length > 0) {
-            const lat = parseFloat(data[0].lat);
-            const lng = parseFloat(data[0].lon);
-            return {
-                success: true,
-                coordinates: { lat, lng }
-            };
+            if (returnMultiple) {
+                // Retourner tous les résultats avec leurs détails
+                return {
+                    success: true,
+                    multiple: true,
+                    results: data.map(result => ({
+                        lat: parseFloat(result.lat),
+                        lng: parseFloat(result.lon),
+                        display_name: result.display_name,
+                        type: result.type,
+                        importance: result.importance
+                    }))
+                };
+            } else {
+                // Retourner le premier résultat
+                const lat = parseFloat(data[0].lat);
+                const lng = parseFloat(data[0].lon);
+                return {
+                    success: true,
+                    coordinates: { lat, lng },
+                    display_name: data[0].display_name
+                };
+            }
         } else {
             return { success: false, error: 'Adresse introuvable' };
         }
