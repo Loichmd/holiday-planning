@@ -625,11 +625,9 @@ async function saveDayCustomization(projectId, dateKey, { label, location }) {
 // GEOCODING FUNCTIONS
 // ============================================
 
-// Mapbox API Key (publique, pas de secret)
-const MAPBOX_TOKEN = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw'; // Token public de démo Mapbox
-
 /**
  * Géocode une adresse en coordonnées lat/lng
+ * Utilise Nominatim (OpenStreetMap) - 100% gratuit, pas de token
  * @param {string} address - Adresse à géocoder
  * @returns {Promise<{success: boolean, coordinates?: {lat: number, lng: number}, error?: string}>}
  */
@@ -642,19 +640,26 @@ async function geocodeAddress(address) {
         // Encoder l'adresse pour l'URL
         const encodedAddress = encodeURIComponent(address.trim());
 
-        // Appel API Mapbox Geocoding
+        // Appel API Nominatim (OpenStreetMap)
+        // User-Agent requis par Nominatim
         const response = await fetch(
-            `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedAddress}.json?access_token=${MAPBOX_TOKEN}&limit=1`
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=1`,
+            {
+                headers: {
+                    'User-Agent': 'HolidayPlanningApp/1.0'
+                }
+            }
         );
 
         if (!response.ok) {
-            throw new Error(`Erreur API Mapbox: ${response.status}`);
+            throw new Error(`Erreur API Nominatim: ${response.status}`);
         }
 
         const data = await response.json();
 
-        if (data.features && data.features.length > 0) {
-            const [lng, lat] = data.features[0].center;
+        if (data && data.length > 0) {
+            const lat = parseFloat(data[0].lat);
+            const lng = parseFloat(data[0].lon);
             return {
                 success: true,
                 coordinates: { lat, lng }

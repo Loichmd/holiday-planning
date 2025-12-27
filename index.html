@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0">
     <title>Planning Vacances - Responsive</title>
 
-    <!-- Mapbox GL JS -->
-    <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
-    <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
+    <!-- Leaflet.js (OpenStreetMap) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -655,10 +655,10 @@
             z-index: 50;
         }
         
-        /* Mobile: En bas à droite */
+        /* Mobile: En bas à droite, au-dessus de la bottom nav */
         @media (max-width: 767px) {
             .fab {
-                bottom: 24px;
+                bottom: 88px; /* 64px (bottom-nav) + 24px de marge */
                 right: 24px;
             }
         }
@@ -3727,17 +3727,14 @@
 
         function initializeMap() {
             if (!map) {
-                mapboxgl.accessToken = MAPBOX_TOKEN;
+                // Initialize Leaflet map
+                map = L.map('map').setView([48.8566, 2.3522], 12); // Paris par défaut
 
-                map = new mapboxgl.Map({
-                    container: 'map',
-                    style: 'mapbox://styles/mapbox/streets-v12',
-                    center: [2.3522, 48.8566], // Paris par défaut
-                    zoom: 12
-                });
-
-                // Add navigation controls
-                map.addControl(new mapboxgl.NavigationControl());
+                // Add OpenStreetMap tile layer
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors',
+                    maxZoom: 19
+                }).addTo(map);
 
                 // Setup bottom sheet drag
                 setupBottomSheet();
@@ -3810,7 +3807,7 @@
 
         function updateMapMarkers(dayActivities) {
             // Clear existing markers
-            markers.forEach(marker => marker.remove());
+            markers.forEach(marker => map.removeLayer(marker));
             markers = [];
 
             // Filter activities with coordinates
@@ -3822,29 +3819,30 @@
                 return;
             }
 
-            // Add new markers
-            const bounds = new mapboxgl.LngLatBounds();
+            // Collect bounds
+            const bounds = [];
 
             activitiesWithCoords.forEach((activity, index) => {
-                // Create marker element
-                const el = document.createElement('div');
-                el.innerHTML = `<div style="background: linear-gradient(135deg, #6366F1 0%, #EC4899 100%); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); border: 3px solid white;">${index + 1}</div>`;
+                // Create custom icon with number
+                const icon = L.divIcon({
+                    className: 'custom-marker',
+                    html: `<div style="background: linear-gradient(135deg, #6366F1 0%, #EC4899 100%); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); border: 3px solid white;">${index + 1}</div>`,
+                    iconSize: [36, 36],
+                    iconAnchor: [18, 18]
+                });
 
                 // Add marker to map
-                const marker = new mapboxgl.Marker(el)
-                    .setLngLat([activity.longitude, activity.latitude])
-                    .addTo(map);
+                const marker = L.marker([activity.latitude, activity.longitude], { icon: icon })
+                    .addTo(map)
+                    .on('click', () => focusActivity(activity.id));
 
                 markers.push(marker);
-                bounds.extend([activity.longitude, activity.latitude]);
-
-                // Add click handler
-                el.onclick = () => focusActivity(activity.id);
+                bounds.push([activity.latitude, activity.longitude]);
             });
 
             // Fit map to bounds
-            if (markers.length > 0) {
-                map.fitBounds(bounds, { padding: 100, maxZoom: 14 });
+            if (bounds.length > 0) {
+                map.fitBounds(bounds, { padding: [100, 100], maxZoom: 14 });
             }
         }
 
@@ -3875,10 +3873,8 @@
         function focusActivity(activityId) {
             const activity = activities.find(a => a.id === activityId);
             if (activity && activity.latitude && activity.longitude) {
-                map.flyTo({
-                    center: [activity.longitude, activity.latitude],
-                    zoom: 15,
-                    duration: 1000
+                map.flyTo([activity.latitude, activity.longitude], 15, {
+                    duration: 1
                 });
 
                 // Highlight in bottom sheet
