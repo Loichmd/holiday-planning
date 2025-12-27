@@ -3671,20 +3671,27 @@
                 }
             });
 
+            // Get elements
+            const timelineContainer = document.getElementById('timelineContainer');
+            const planningView = document.getElementById('planningView');
+            const mapView = document.getElementById('mapView');
+
             // Hide all views
-            document.getElementById('calendarView').style.display = 'none';
-            document.getElementById('planningView').style.display = 'none';
-            document.getElementById('mapView').style.display = 'none';
+            if (timelineContainer) timelineContainer.style.display = 'none';
+            if (planningView) planningView.style.display = 'none';
+            if (mapView) mapView.style.display = 'none';
 
             // Show selected view
             if (viewName === 'calendar') {
-                document.getElementById('calendarView').style.display = 'block';
+                if (timelineContainer) timelineContainer.style.display = 'block';
                 currentView = 'timeline';
+                renderCalendar();
             } else if (viewName === 'planning') {
-                document.getElementById('planningView').style.display = 'block';
+                if (planningView) planningView.style.display = 'block';
                 currentView = 'planning';
+                renderPlanningView();
             } else if (viewName === 'map') {
-                document.getElementById('mapView').style.display = 'block';
+                if (mapView) mapView.style.display = 'block';
                 currentView = 'map';
                 initializeMap();
             }
