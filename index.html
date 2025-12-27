@@ -3675,11 +3675,13 @@
                 });
 
                 // Get elements
+                const contentHeader = document.querySelector('.content-header');
                 const timelineContainer = document.getElementById('timelineContainer');
                 const planningView = document.getElementById('planningView');
                 const mapView = document.getElementById('mapView');
 
                 console.log('Elements found:', {
+                    contentHeader: !!contentHeader,
                     timelineContainer: !!timelineContainer,
                     planningView: !!planningView,
                     mapView: !!mapView
@@ -3690,6 +3692,11 @@
                 if (planningView) planningView.style.display = 'none';
                 if (mapView) mapView.style.display = 'none';
 
+                // Show/hide content header based on view
+                if (contentHeader) {
+                    contentHeader.style.display = (viewName === 'calendar') ? 'block' : 'none';
+                }
+
                 // Show selected view
                 if (viewName === 'calendar') {
                     console.log('Showing calendar view');
@@ -3697,12 +3704,14 @@
                         timelineContainer.style.display = 'block';
                     }
                     currentView = 'timeline';
+                    switchView('timeline'); // Also trigger the desktop view switch
                 } else if (viewName === 'planning') {
                     console.log('Showing planning view');
                     if (planningView) {
                         planningView.style.display = 'block';
                     }
                     currentView = 'planning';
+                    switchView('planning'); // Also trigger the desktop view switch
                 } else if (viewName === 'map') {
                     console.log('Showing map view');
                     if (mapView) {
