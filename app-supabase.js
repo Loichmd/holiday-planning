@@ -620,3 +620,126 @@ async function saveDayCustomization(projectId, dateKey, { label, location }) {
         return { success: false, error: error.message };
     }
 }
+
+// ============================================
+// GEOCODING FUNCTIONS
+// ============================================
+
+// Mapbox API Key (publique, pas de secret)
+const MAPBOX_TOKEN = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw'; // Token public de démo Mapbox
+
+/**
+ * Géocode une adresse en coordonnées lat/lng
+ * @param {string} address - Adresse à géocoder
+ * @returns {Promise<{success: boolean, coordinates?: {lat: number, lng: number}, error?: string}>}
+ */
+async function geocodeAddress(address) {
+    if (!address || address.trim() === '') {
+        return { success: false, error: 'Adresse vide' };
+    }
+
+    try {
+        // Encoder l'adresse pour l'URL
+        const encodedAddress = encodeURIComponent(address.trim());
+
+        // Appel API Mapbox Geocoding
+        const response = await fetch(
+            `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedAddress}.json?access_token=${MAPBOX_TOKEN}&limit=1`
+        );
+
+        if (!response.ok) {
+            throw new Error(`Erreur API Mapbox: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.features && data.features.length > 0) {
+            const [lng, lat] = data.features[0].center;
+            return {
+                success: true,
+                coordinates: { lat, lng }
+            };
+        } else {
+            return { success: false, error: 'Adresse introuvable' };
+        }
+    } catch (error) {
+        console.error('Erreur géocodage:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Géocode une activité et met à jour ses coordonnées dans Supabase
+ * @param {string} activityId - ID de l'activité
+ * @param {string} location - Adresse à géocoder
+ * @returns {Promise<{success: boolean, coordinates?: {lat: number, lng: number}, error?: string}>}
+ */
+async function geocodeActivity(activityId, location) {
+    try {
+        // Géocoder l'adresse
+        const result = await geocodeAddress(location);
+
+        if (!result.success) {
+            return result;
+        }
+
+        // Mettre à jour l'activité avec les coordonnées
+        const { error } = await supabaseClient
+            .from('activities')
+            .update({
+                latitude: result.coordinates.lat,
+                longitude: result.coordinates.lng,
+                geocoded: true
+            })
+            .eq('id', activityId);
+
+        if (error) throw error;
+
+        return { success: true, coordinates: result.coordinates };
+    } catch (error) {
+        console.error('Erreur geocodeActivity:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Géocode toutes les activités d'un projet qui n'ont pas encore été géocodées
+ * @param {string} projectId - ID du projet
+ * @returns {Promise<{success: boolean, geocoded: number, failed: number}>}
+ */
+async function geocodeProjectActivities(projectId) {
+    try {
+        // Récupérer toutes les activités du projet non géocodées avec une location
+        const { data: activities, error } = await supabaseClient
+            .from('activities')
+            .select('id, location')
+            .eq('project_id', projectId)
+            .not('location', 'is', null)
+            .neq('location', '')
+            .or('geocoded.is.null,geocoded.eq.false');
+
+        if (error) throw error;
+
+        let geocoded = 0;
+        let failed = 0;
+
+        // Géocoder chaque activité (avec délai pour respecter les limites de l'API)
+        for (const activity of activities || []) {
+            const result = await geocodeActivity(activity.id, activity.location);
+            if (result.success) {
+                geocoded++;
+            } else {
+                failed++;
+                console.warn(`Échec géocodage pour ${activity.location}:`, result.error);
+            }
+
+            // Délai de 100ms entre chaque requête pour éviter rate limiting
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        return { success: true, geocoded, failed };
+    } catch (error) {
+        console.error('Erreur geocodeProjectActivities:', error);
+        return { success: false, geocoded: 0, failed: 0, error: error.message };
+    }
+}
