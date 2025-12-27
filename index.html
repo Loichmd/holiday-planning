@@ -3663,37 +3663,56 @@
         let selectedDay = null;
 
         function switchMainView(viewName) {
-            // Update bottom nav active state
-            document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
-                item.classList.remove('active');
-                if (item.dataset.view === viewName) {
-                    item.classList.add('active');
+            console.log('switchMainView called with:', viewName);
+
+            try {
+                // Update bottom nav active state
+                document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
+                    item.classList.remove('active');
+                    if (item.dataset.view === viewName) {
+                        item.classList.add('active');
+                    }
+                });
+
+                // Get elements
+                const timelineContainer = document.getElementById('timelineContainer');
+                const planningView = document.getElementById('planningView');
+                const mapView = document.getElementById('mapView');
+
+                console.log('Elements found:', {
+                    timelineContainer: !!timelineContainer,
+                    planningView: !!planningView,
+                    mapView: !!mapView
+                });
+
+                // Hide all views
+                if (timelineContainer) timelineContainer.style.display = 'none';
+                if (planningView) planningView.style.display = 'none';
+                if (mapView) mapView.style.display = 'none';
+
+                // Show selected view
+                if (viewName === 'calendar') {
+                    console.log('Showing calendar view');
+                    if (timelineContainer) {
+                        timelineContainer.style.display = 'block';
+                    }
+                    currentView = 'timeline';
+                } else if (viewName === 'planning') {
+                    console.log('Showing planning view');
+                    if (planningView) {
+                        planningView.style.display = 'block';
+                    }
+                    currentView = 'planning';
+                } else if (viewName === 'map') {
+                    console.log('Showing map view');
+                    if (mapView) {
+                        mapView.style.display = 'block';
+                    }
+                    currentView = 'map';
+                    setTimeout(() => initializeMap(), 100);
                 }
-            });
-
-            // Get elements
-            const timelineContainer = document.getElementById('timelineContainer');
-            const planningView = document.getElementById('planningView');
-            const mapView = document.getElementById('mapView');
-
-            // Hide all views
-            if (timelineContainer) timelineContainer.style.display = 'none';
-            if (planningView) planningView.style.display = 'none';
-            if (mapView) mapView.style.display = 'none';
-
-            // Show selected view
-            if (viewName === 'calendar') {
-                if (timelineContainer) timelineContainer.style.display = 'block';
-                currentView = 'timeline';
-                renderCalendar();
-            } else if (viewName === 'planning') {
-                if (planningView) planningView.style.display = 'block';
-                currentView = 'planning';
-                renderPlanningView();
-            } else if (viewName === 'map') {
-                if (mapView) mapView.style.display = 'block';
-                currentView = 'map';
-                initializeMap();
+            } catch (error) {
+                console.error('Error in switchMainView:', error);
             }
         }
 
