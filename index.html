@@ -1164,7 +1164,12 @@
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
-            display: none; /* Hidden by default */
+            opacity: 0; /* Hidden by default */
+            height: 0;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
@@ -1172,15 +1177,34 @@
 
         /* Show on hover on desktop only */
         @media (min-width: 768px) {
-            .day-column-trello:hover .add-activity-inline {
-                display: flex;
-            }
+            /* Show when hovering the button itself */
             .add-activity-inline:hover {
+                opacity: 1;
+                height: auto;
+                padding: 8px 12px;
+                margin: 6px 0;
                 background: rgba(34, 139, 230, 0.05);
                 border-color: #228be6;
                 color: #228be6;
                 transform: scale(1.02);
             }
+
+            /* Show when hovering the card above */
+            .activity-card-trello:hover + .add-activity-inline {
+                opacity: 1;
+                height: auto;
+                padding: 8px 12px;
+                margin: 6px 0;
+            }
+
+            /* Show when hovering the card below (using has selector if supported, fallback with JS) */
+            .add-activity-inline:has(+ .activity-card-trello:hover) {
+                opacity: 1;
+                height: auto;
+                padding: 8px 12px;
+                margin: 6px 0;
+            }
+
             .add-activity-inline:active {
                 transform: scale(0.98);
             }
