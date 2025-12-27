@@ -1524,11 +1524,14 @@
     width: 100%;
     height: 100%;
     position: relative;
+    z-index: 1;
 }
 
 #map {
     width: 100%;
     height: 100%;
+    position: relative;
+    z-index: 1;
 }
 
 /* Day Selector Chips */
@@ -1544,6 +1547,7 @@
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none; /* Firefox */
+    pointer-events: none; /* Allow clicks to pass through to map */
 }
 
 .day-selector::-webkit-scrollbar {
@@ -1562,6 +1566,7 @@
     cursor: pointer;
     transition: all 0.2s ease;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    pointer-events: auto; /* Re-enable clicks on chips */
 }
 
 .day-chip.active {
