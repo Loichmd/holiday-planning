@@ -1520,6 +1520,28 @@
     width: 100%;
 }
 
+/* Map Header (Desktop only) */
+.map-header {
+    display: none;
+    background: white;
+    padding: 20px;
+    border-bottom: 1px solid #e5e7eb;
+    justify-content: space-between;
+    align-items: center;
+}
+
+@media (min-width: 768px) {
+    .map-header {
+        display: flex;
+    }
+    .map-view {
+        height: calc(100vh - 180px);
+    }
+    .day-selector {
+        top: 76px; /* Below the header */
+    }
+}
+
 .map-container {
     width: 100%;
     height: 100%;
@@ -1714,6 +1736,42 @@
 
 /* Map marker custom styles */
 .mapboxgl-marker {
+    cursor: pointer;
+}
+
+/* Custom Leaflet Tooltip */
+.custom-tooltip {
+    background: rgba(17, 24, 39, 0.95) !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 6px 12px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.custom-tooltip::before {
+    border-top-color: rgba(17, 24, 39, 0.95) !important;
+}
+
+/* Custom Leaflet Popup */
+.custom-popup .leaflet-popup-content-wrapper {
+    border-radius: 16px !important;
+    padding: 16px !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2) !important;
+}
+
+.custom-popup .leaflet-popup-content {
+    margin: 0 !important;
+    line-height: 1.5 !important;
+}
+
+.custom-popup .leaflet-popup-tip {
+    background: white !important;
+}
+
+.leaflet-marker-icon {
     cursor: pointer;
 }
 
@@ -1942,11 +2000,14 @@
                 <div class="planning-header">
                     <div class="planning-header-top">
                         <div class="view-tabs">
-                            <button class="view-tab" onclick="switchView('timeline')">
+                            <button class="view-tab" onclick="switchMainView('calendar')">
                                 📅 Vue Calendrier
                             </button>
-                            <button class="view-tab active" onclick="switchView('planning')">
+                            <button class="view-tab active" onclick="switchMainView('planning')">
                                 📊 Planning Hebdomadaire
+                            </button>
+                            <button class="view-tab" onclick="switchMainView('map')">
+                                🗺️ Carte
                             </button>
                         </div>
                         <div class="project-selector-planning">
@@ -1968,6 +2029,28 @@
 
         <!-- Map View -->
         <div class="map-view" id="mapView">
+            <!-- Map Header with Tabs (Desktop only) -->
+            <div class="map-header">
+                <div class="view-tabs">
+                    <button class="view-tab" onclick="switchMainView('calendar')">
+                        📅 Vue Calendrier
+                    </button>
+                    <button class="view-tab" onclick="switchMainView('planning')">
+                        📊 Planning Hebdomadaire
+                    </button>
+                    <button class="view-tab active" onclick="switchMainView('map')">
+                        🗺️ Carte
+                    </button>
+                </div>
+                <div class="project-selector-map">
+                    <button class="project-btn" onclick="toggleProjectDropdownMap()">
+                        <span id="currentProjectNameMap">Mes Projets</span>
+                        <span style="margin-left: auto;">▼</span>
+                    </button>
+                    <div class="project-dropdown" id="projectDropdownMap"></div>
+                </div>
+            </div>
+
             <div class="day-selector" id="daySelector">
                 <!-- Day chips will be generated here -->
             </div>
@@ -2755,11 +2838,14 @@
             const dropdown = document.getElementById('projectDropdown');
             const dropdownPlanning = document.getElementById('projectDropdownPlanning');
             const dropdownCalendar = document.getElementById('projectDropdownCalendar');
+            const dropdownMap = document.getElementById('projectDropdownMap');
             const currentProj = projects.find(p => p.id === currentProject);
 
             document.getElementById('currentProjectName').textContent = currentProj ? currentProj.name : 'Mes Projets';
             document.getElementById('currentProjectNamePlanning').textContent = currentProj ? currentProj.name : 'Mes Projets';
             document.getElementById('currentProjectNameCalendar').textContent = currentProj ? currentProj.name : 'Mes Projets';
+            const mapNameEl = document.getElementById('currentProjectNameMap');
+            if (mapNameEl) mapNameEl.textContent = currentProj ? currentProj.name : 'Mes Projets';
 
             // Afficher/cacher le bouton de partage et les collaborateurs
             if (currentProject) {
@@ -2800,6 +2886,9 @@
             if (dropdownCalendar) {
                 dropdownCalendar.innerHTML = dropdownHTML;
             }
+            if (dropdownMap) {
+                dropdownMap.innerHTML = dropdownHTML;
+            }
         }
 
         function toggleProjectDropdown() {
@@ -2808,6 +2897,10 @@
 
         function toggleProjectDropdownPlanning() {
             document.getElementById('projectDropdownPlanning').classList.toggle('show');
+        }
+
+        function toggleProjectDropdownMap() {
+            document.getElementById('projectDropdownMap').classList.toggle('show');
         }
 
         function toggleUserMenu() {
@@ -2823,6 +2916,8 @@
             document.getElementById('projectDropdown').classList.remove('show');
             document.getElementById('projectDropdownPlanning').classList.remove('show');
             document.getElementById('projectDropdownCalendar').classList.remove('show');
+            const mapDropdown = document.getElementById('projectDropdownMap');
+            if (mapDropdown) mapDropdown.classList.remove('show');
             renderProjects();
 
             // Charger les activités du projet sélectionné
@@ -2835,6 +2930,8 @@
             // Re-render the current view
             if (currentView === 'planning') {
                 await renderPlanningView();
+            } else if (currentView === 'map') {
+                renderDaySelector();
             } else {
                 renderCalendar();
             }
@@ -3839,13 +3936,42 @@
                     className: 'custom-marker',
                     html: `<div style="background: linear-gradient(135deg, #6366F1 0%, #EC4899 100%); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); border: 3px solid white;">${index + 1}</div>`,
                     iconSize: [36, 36],
-                    iconAnchor: [18, 18]
+                    iconAnchor: [18, 18],
+                    popupAnchor: [0, -18]
                 });
 
-                // Add marker to map
+                // Create popup content with "Directions" button
+                const popupContent = `
+                    <div style="min-width: 200px;">
+                        <div style="font-weight: 700; font-size: 16px; margin-bottom: 8px; color: #111827;">
+                            ${CATEGORIES[activity.category].icon} ${activity.title}
+                        </div>
+                        ${activity.time ? `<div style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">🕐 ${activity.time.substring(0, 5)}</div>` : ''}
+                        ${activity.location ? `<div style="font-size: 14px; color: #6b7280; margin-bottom: 8px;">📍 ${activity.location}</div>` : ''}
+                        ${activity.description ? `<div style="font-size: 13px; color: #374151; margin-bottom: 12px; border-top: 1px solid #e5e7eb; padding-top: 8px;">${activity.description}</div>` : ''}
+                        <button
+                            onclick="openDirections(event, ${activity.latitude}, ${activity.longitude})"
+                            style="width: 100%; padding: 10px; background: #6366F1; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 6px;"
+                            onmouseover="this.style.background='#4F46E5'"
+                            onmouseout="this.style.background='#6366F1'">
+                            🧭 Directions
+                        </button>
+                    </div>
+                `;
+
+                // Add marker to map with tooltip and popup
                 const marker = L.marker([activity.latitude, activity.longitude], { icon: icon })
-                    .addTo(map)
-                    .on('click', () => focusActivity(activity.id));
+                    .bindTooltip(activity.title, {
+                        permanent: false,
+                        direction: 'top',
+                        offset: [0, -20],
+                        className: 'custom-tooltip'
+                    })
+                    .bindPopup(popupContent, {
+                        maxWidth: 300,
+                        className: 'custom-popup'
+                    })
+                    .addTo(map);
 
                 markers.push(marker);
                 bounds.push([activity.latitude, activity.longitude]);
