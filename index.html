@@ -1516,80 +1516,41 @@
 .map-view {
     display: none;
     position: relative;
-    height: calc(100vh - 120px);
     width: 100%;
+}
+
+/* Mobile: Full height minus bottom nav */
+.map-view {
+    height: calc(100vh - 64px);
+}
+
+/* Desktop: Full height */
+@media (min-width: 768px) {
+    .map-view {
+        height: 100vh;
+    }
 }
 
 /* Map Header (Desktop only) */
 .map-header {
     display: none;
+    position: relative;
     background: white;
     padding: 20px;
     border-bottom: 1px solid #e5e7eb;
     justify-content: space-between;
     align-items: center;
-    position: relative;
-    z-index: 1100;
+    z-index: 1200;
+    height: 80px;
 }
 
 @media (min-width: 768px) {
     .map-header {
         display: flex;
     }
-    .map-view {
-        height: calc(100vh - 180px);
-        display: flex;
-        flex-direction: column;
-    }
-    .map-container {
-        flex: 1;
-        position: relative;
-    }
-    .day-selector {
-        position: relative; /* Change from absolute to relative on desktop */
-        top: 0; /* Reset top */
-        z-index: 1000; /* Keep high z-index */
-        padding: 16px; /* Add padding */
-        background: white; /* Add background */
-        border-bottom: 1px solid #e5e7eb; /* Add separator */
-    }
-    /* Increase header z-index on desktop to be above day-selector */
-    .map-header {
-        z-index: 1200;
-    }
 }
 
-.map-container {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 1;
-}
-
-@media (min-width: 768px) {
-    .map-container {
-        position: relative;
-        top: auto;
-        left: auto;
-        right: auto;
-        bottom: auto;
-        height: auto;
-        min-height: 500px;
-    }
-}
-
-#map {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    z-index: 1;
-}
-
-/* Day Selector Chips */
+/* Day Selector */
 .day-selector {
     position: absolute;
     top: 16px;
@@ -1601,8 +1562,47 @@
     padding: 0 16px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; /* Firefox */
-    pointer-events: none; /* Allow clicks to pass through to map */
+    scrollbar-width: none;
+    pointer-events: none;
+}
+
+/* Desktop: Day selector below header */
+@media (min-width: 768px) {
+    .day-selector {
+        position: relative;
+        top: 0;
+        background: white;
+        padding: 16px;
+        border-bottom: 1px solid #e5e7eb;
+        pointer-events: auto;
+        height: 70px;
+    }
+}
+
+/* Map Container */
+.map-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+}
+
+/* Desktop: Map below header + day-selector */
+@media (min-width: 768px) {
+    .map-container {
+        position: absolute;
+        top: 150px; /* 80px header + 70px day-selector */
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }
+}
+
+#map {
+    width: 100%;
+    height: 100%;
 }
 
 .day-selector::-webkit-scrollbar {
