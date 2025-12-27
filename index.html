@@ -1541,7 +1541,11 @@
     }
     .day-selector {
         top: 76px; /* Below the header */
-        z-index: 500; /* Lower than header */
+        z-index: 1000; /* Keep high z-index to be above map */
+    }
+    /* Increase header z-index on desktop to be above day-selector */
+    .map-header {
+        z-index: 1200;
     }
 }
 
