@@ -1891,11 +1891,14 @@
             <div class="content-header">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <div class="view-tabs">
-                        <button class="view-tab active" onclick="switchView('timeline')">
+                        <button class="view-tab" onclick="switchMainView('calendar')">
                             📅 Vue Calendrier
                         </button>
-                        <button class="view-tab" onclick="switchView('planning')">
+                        <button class="view-tab active" onclick="switchMainView('planning')">
                             📊 Planning Hebdomadaire
+                        </button>
+                        <button class="view-tab" onclick="switchMainView('map')">
+                            🗺️ Carte
                         </button>
                     </div>
                     <div style="display: flex; align-items: center; gap: 12px;">
