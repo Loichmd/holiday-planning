@@ -1164,19 +1164,26 @@
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
-            display: flex;
+            display: none; /* Hidden by default */
             align-items: center;
             justify-content: center;
             gap: 6px;
         }
-        .add-activity-inline:hover {
-            background: rgba(34, 139, 230, 0.05);
-            border-color: #228be6;
-            color: #228be6;
-            transform: scale(1.02);
-        }
-        .add-activity-inline:active {
-            transform: scale(0.98);
+
+        /* Show on hover on desktop only */
+        @media (min-width: 768px) {
+            .day-column-trello:hover .add-activity-inline {
+                display: flex;
+            }
+            .add-activity-inline:hover {
+                background: rgba(34, 139, 230, 0.05);
+                border-color: #228be6;
+                color: #228be6;
+                transform: scale(1.02);
+            }
+            .add-activity-inline:active {
+                transform: scale(0.98);
+            }
         }
 
         .activity-card-time {
