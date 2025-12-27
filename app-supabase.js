@@ -561,3 +561,62 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
         activities = [];
     }
 });
+
+// ============================================
+// DAY CUSTOMIZATIONS (Label, Location)
+// ============================================
+
+/**
+ * Load day customizations for a project
+ */
+async function loadDayCustomizations(projectId) {
+    try {
+        const { data, error } = await supabaseClient
+            .from('day_customizations')
+            .select('*')
+            .eq('project_id', projectId);
+
+        if (error) throw error;
+
+        // Convert to object keyed by date_key for easy lookup
+        const customizations = {};
+        (data || []).forEach(item => {
+            customizations[item.date_key] = {
+                label: item.custom_label,
+                location: item.custom_location
+            };
+        });
+
+        return { success: true, customizations };
+    } catch (error) {
+        console.error('Erreur loadDayCustomizations:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Save/update day customization
+ */
+async function saveDayCustomization(projectId, dateKey, { label, location }) {
+    try {
+        const { data, error } = await supabaseClient
+            .from('day_customizations')
+            .upsert({
+                user_id: currentUser.id,
+                project_id: projectId,
+                date_key: dateKey,
+                custom_label: label || null,
+                custom_location: location || null,
+                updated_at: new Date().toISOString()
+            }, {
+                onConflict: 'user_id,project_id,date_key'
+            });
+
+        if (error) throw error;
+
+        return { success: true };
+    } catch (error) {
+        console.error('Erreur saveDayCustomization:', error);
+        return { success: false, error: error.message };
+    }
+}

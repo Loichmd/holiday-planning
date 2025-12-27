@@ -914,12 +914,44 @@
             border-bottom: 1px solid #e9ecef;
             flex-shrink: 0;
         }
+        .planning-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
         .planning-header .view-tabs {
             margin: 0;
         }
         .project-selector-planning {
             flex-shrink: 0;
             position: relative;
+        }
+
+        /* Mobile: Stack vertically */
+        @media (max-width: 767px) {
+            .planning-header-top {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+            .view-tabs {
+                width: 100%;
+            }
+            .project-selector-planning {
+                width: 100%;
+            }
+            .project-selector-planning .project-btn {
+                width: 100%;
+            }
+
+            /* Hide project selector in calendar on mobile */
+            .content-header .project-selector-calendar {
+                display: none;
+            }
+            .content-header .btn-icon {
+                display: none;
+            }
         }
         .project-selector-calendar {
             position: relative;
@@ -1544,7 +1576,7 @@
             <!-- Planning View - Trello Style -->
             <div class="planning-view" id="planningView">
                 <div class="planning-header">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div class="planning-header-top">
                         <div class="view-tabs">
                             <button class="view-tab" onclick="switchView('timeline')">
                                 📅 Vue Calendrier
@@ -2721,10 +2753,9 @@
             // Sort dates
             const sortedDates = Object.keys(activitiesByDate).sort();
 
-            // Load saved customizations
-            const savedLabels = JSON.parse(localStorage.getItem(`${getStorageKey()}_dayLabels`) || '{}');
-            const savedLocations = JSON.parse(localStorage.getItem(`${getStorageKey()}_dayLocations`) || '{}');
-            const savedRegions = JSON.parse(localStorage.getItem(`${getStorageKey()}_regions`) || '{}');
+            // Load saved customizations from Supabase
+            const customizationsResult = await loadDayCustomizations(currentProject);
+            const savedCustomizations = customizationsResult.success ? customizationsResult.customizations : {};
 
             // Generate columns for each day
             const columnsHTML = sortedDates.map((dateKey, index) => {
@@ -2738,12 +2769,10 @@
 
                 const formattedDate = `${dayNames[date.getDay()]} ${date.getDate()} ${monthNames[date.getMonth()]}`;
 
-                // Use saved label or default
-                const dayLabel = savedLabels[dateKey] || `Jour ${dayNumber}`;
-
-                // Use saved location or auto-detect
-                const location = savedLocations[dateKey] || savedRegions[dateKey] || '';
-                const autoLocation = location || (dayActivities[0]?.location ? dayActivities[0].location.split(',')[0] : '');
+                // Use saved customization from Supabase or default
+                const customization = savedCustomizations[dateKey] || {};
+                const dayLabel = customization.label || `Jour ${dayNumber}`;
+                const autoLocation = customization.location || (dayActivities[0]?.location ? dayActivities[0].location.split(',')[0] : '');
 
                 const cardsHTML = dayActivities.map(activity => renderActivityCardTrello(activity)).join('');
 
@@ -2804,10 +2833,10 @@
         }
 
         // Save custom day label (ex: "Jour de départ" instead of "Jour 1")
-        function saveDayLabel(dateKey, label) {
-            const savedLabels = JSON.parse(localStorage.getItem(`${getStorageKey()}_dayLabels`) || '{}');
-            savedLabels[dateKey] = label.trim();
-            localStorage.setItem(`${getStorageKey()}_dayLabels`, JSON.stringify(savedLabels));
+        async function saveDayLabel(dateKey, label) {
+            await saveDayCustomization(currentProject, dateKey, {
+                label: label.trim()
+            });
         }
 
         // Edit day date with a calendar input
@@ -2872,15 +2901,13 @@
         }
 
         // Save day location
-        function saveDayLocation(dateKey, location) {
-            const savedLocations = JSON.parse(localStorage.getItem(`${getStorageKey()}_dayLocations`) || '{}');
+        async function saveDayLocation(dateKey, location) {
             const loc = location.trim();
             if (loc && loc !== 'Ajouter un lieu') {
-                savedLocations[dateKey] = loc;
-            } else {
-                delete savedLocations[dateKey];
+                await saveDayCustomization(currentProject, dateKey, {
+                    location: loc
+                });
             }
-            localStorage.setItem(`${getStorageKey()}_dayLocations`, JSON.stringify(savedLocations));
         }
 
         function saveDayRegion(dayKey, value) {
