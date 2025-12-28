@@ -583,7 +583,8 @@ async function loadDayCustomizations(projectId) {
         (data || []).forEach(item => {
             customizations[item.date_key] = {
                 label: item.custom_label,
-                location: item.custom_location
+                location: item.custom_location,
+                city: item.city_name
             };
         });
 
@@ -597,7 +598,7 @@ async function loadDayCustomizations(projectId) {
 /**
  * Save/update day customization
  */
-async function saveDayCustomization(projectId, dateKey, { label, location }) {
+async function saveDayCustomization(projectId, dateKey, { label, location, city }) {
     try {
         const { data, error } = await supabaseClient
             .from('day_customizations')
@@ -607,6 +608,7 @@ async function saveDayCustomization(projectId, dateKey, { label, location }) {
                 date_key: dateKey,
                 custom_label: label || null,
                 custom_location: location || null,
+                city_name: city || null,
                 updated_at: new Date().toISOString()
             }, {
                 onConflict: 'user_id,project_id,date_key'

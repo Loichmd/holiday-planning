@@ -3374,7 +3374,8 @@
                 // Use saved customization from Supabase or default
                 const customization = savedCustomizations[dateKey] || {};
                 const dayLabel = customization.label || `Jour ${dayNumber}`;
-                const autoLocation = customization.location || (dayActivities[0]?.location ? dayActivities[0].location.split(',')[0] : '');
+                const autoLocation = customization.location || '';
+                const cityName = customization.city || '';
 
                 // Generate cards with "+" buttons between them
                 const cardsWithButtons = [];
@@ -3401,14 +3402,15 @@
                 const cardsHTML = cardsWithButtons.join('');
 
                 return `
-                    <div class="day-column-trello" data-date="${dateKey}" data-location="${autoLocation || ''}">
+                    <div class="day-column-trello" data-date="${dateKey}" data-city="${cityName || ''}">
                         <div class="day-column-header">
                             <div class="day-weather" id="weather-${dateKey}">
                                 <div style="font-size: 11px; color: #adb5bd;">Chargement...</div>
                             </div>
                             <div class="day-number" contenteditable="true" onclick="this.focus()" onblur="saveDayLabel('${dateKey}', this.textContent)" title="Cliquez pour modifier">${dayLabel}</div>
                             <div class="day-date" onclick="editDayDate('${dateKey}', '${formattedDate}')" style="cursor: pointer;" title="Cliquez pour modifier la date">${formattedDate}</div>
-                            <div class="day-location" contenteditable="true" onclick="this.focus()" onblur="saveDayLocation('${dateKey}', this.textContent.replace('📍 ', ''))" title="Cliquez pour modifier">📍 ${autoLocation || 'Ajouter un lieu'}</div>
+                            <div class="day-location" contenteditable="true" onclick="this.focus()" onblur="saveDayLocation('${dateKey}', this.textContent.replace('📍 ', ''))" title="Cliquez pour modifier">📍 ${autoLocation || 'Région/Catégorie'}</div>
+                            <div class="day-location" contenteditable="true" onclick="this.focus()" onblur="saveDayCity('${dateKey}', this.textContent.replace('🌍 ', ''))" title="Cliquez pour modifier">🌍 ${cityName || 'Ville (météo)'}</div>
                         </div>
                         <div class="day-cards-list"
                              ondragover="handleDragOver(event)"
@@ -3433,33 +3435,41 @@
 
             dayColumns.forEach(async (column) => {
                 const dateKey = column.dataset.date;
-                const location = column.dataset.location;
-                const weatherEl = document.getElementById(`weather-${dateKey}`);
+                const city = column.dataset.city;
 
-                if (!location || !weatherEl) {
-                    if (weatherEl) {
-                        weatherEl.style.display = 'none';
-                    }
-                    return;
-                }
-
-                // Récupérer la météo
-                const result = await getWeatherWithCache(location, dateKey);
-
-                if (result.success && result.weather) {
-                    const { temp, description, icon } = result.weather;
-                    weatherEl.innerHTML = `
-                        <img src="${getWeatherIconUrl(icon)}" alt="${description}" class="day-weather-icon">
-                        <div>
-                            <div class="day-weather-temp">${temp}°C</div>
-                            <div class="day-weather-desc">${description}</div>
-                        </div>
-                    `;
-                } else {
-                    // Masquer si pas de météo
-                    weatherEl.style.display = 'none';
+                if (city) {
+                    loadWeatherForDay(dateKey, city);
                 }
             });
+        }
+
+        // Charger la météo pour un jour spécifique
+        async function loadWeatherForDay(dateKey, city) {
+            const weatherEl = document.getElementById(`weather-${dateKey}`);
+
+            if (!city || !weatherEl) {
+                if (weatherEl) {
+                    weatherEl.style.display = 'none';
+                }
+                return;
+            }
+
+            // Récupérer la météo
+            const result = await getWeatherWithCache(city, dateKey);
+
+            if (result.success && result.weather) {
+                const { temp, description, icon } = result.weather;
+                weatherEl.innerHTML = `
+                    <img src="${getWeatherIconUrl(icon)}" alt="${description}" class="day-weather-icon">
+                    <div>
+                        <div class="day-weather-temp">${temp}°C</div>
+                        <div class="day-weather-desc">${description}</div>
+                    </div>
+                `;
+            } else {
+                // Masquer si pas de météo
+                weatherEl.style.display = 'none';
+            }
         }
 
         // Render activity card for Trello view
@@ -3809,10 +3819,21 @@
         // Save day location
         async function saveDayLocation(dateKey, location) {
             const loc = location.trim();
-            if (loc && loc !== 'Ajouter un lieu') {
+            if (loc && loc !== 'Région/Catégorie') {
                 await saveDayCustomization(currentProject, dateKey, {
                     location: loc
                 });
+            }
+        }
+
+        async function saveDayCity(dateKey, city) {
+            const c = city.trim();
+            if (c && c !== 'Ville (météo)') {
+                await saveDayCustomization(currentProject, dateKey, {
+                    city: c
+                });
+                // Recharger la météo pour ce jour
+                loadWeatherForDay(dateKey, c);
             }
         }
 

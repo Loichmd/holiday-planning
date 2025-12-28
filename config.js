@@ -24,7 +24,7 @@ const SUPABASE_CONFIG = {
 
 // Configuration OpenWeatherMap
 const WEATHER_CONFIG = {
-    apiKey: 'VOTRE_CLE_API_OPENWEATHERMAP_ICI', // Remplacez par votre vraie clé API
+    apiKey: 'b72f0596dd81d7666d9c83b67a1f1375', // Remplacez par votre vraie clé API
     units: 'metric', // Pour avoir les températures en Celsius
     lang: 'fr' // Pour avoir les descriptions en français
 };
