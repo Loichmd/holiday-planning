@@ -599,26 +599,34 @@ async function loadDayCustomizations(projectId) {
  * Save/update day customization
  */
 async function saveDayCustomization(projectId, dateKey, { label, location, city }) {
+    console.log('🔵 saveDayCustomization called with:', { projectId, dateKey, label, location, city });
+    console.log('Current user:', currentUser);
+
     try {
+        const upsertData = {
+            user_id: currentUser.id,
+            project_id: projectId,
+            date_key: dateKey,
+            custom_label: label || null,
+            custom_location: location || null,
+            city_name: city || null,
+            updated_at: new Date().toISOString()
+        };
+
+        console.log('Upsert data:', upsertData);
+
         const { data, error } = await supabaseClient
             .from('day_customizations')
-            .upsert({
-                user_id: currentUser.id,
-                project_id: projectId,
-                date_key: dateKey,
-                custom_label: label || null,
-                custom_location: location || null,
-                city_name: city || null,
-                updated_at: new Date().toISOString()
-            }, {
+            .upsert(upsertData, {
                 onConflict: 'user_id,project_id,date_key'
             });
 
         if (error) throw error;
 
+        console.log('✅ Supabase upsert successful:', data);
         return { success: true };
     } catch (error) {
-        console.error('Erreur saveDayCustomization:', error);
+        console.error('❌ Erreur saveDayCustomization:', error);
         return { success: false, error: error.message };
     }
 }

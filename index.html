@@ -3752,20 +3752,26 @@
 
         // Save custom day label (ex: "Jour de départ" instead of "Jour 1")
         async function saveDayLabel(dateKey, label) {
+            console.log('💾 saveDayLabel:', dateKey, label);
             // Fusionner avec les valeurs existantes
             const existing = dayCustomizations[dateKey] || {};
+            console.log('Existing data:', existing);
             const result = await saveDayCustomization(currentProject, dateKey, {
                 label: label.trim(),
                 location: existing.location,
                 city: existing.city
             });
 
+            console.log('Save result:', result);
             // Mettre à jour le cache local
             if (result.success) {
                 dayCustomizations[dateKey] = {
                     ...existing,
                     label: label.trim()
                 };
+                console.log('✅ Label saved successfully');
+            } else {
+                console.error('❌ Failed to save label:', result.error);
             }
         }
 
@@ -3832,43 +3838,55 @@
 
         // Save day location
         async function saveDayLocation(dateKey, location) {
+            console.log('📍 saveDayLocation:', dateKey, location);
             const loc = location.trim();
             if (loc && loc !== 'Région/Catégorie') {
                 // Fusionner avec les valeurs existantes
                 const existing = dayCustomizations[dateKey] || {};
+                console.log('Existing data:', existing);
                 const result = await saveDayCustomization(currentProject, dateKey, {
                     label: existing.label,
                     location: loc,
                     city: existing.city
                 });
 
+                console.log('Save result:', result);
                 // Mettre à jour le cache local
                 if (result.success) {
                     dayCustomizations[dateKey] = {
                         ...existing,
                         location: loc
                     };
+                    console.log('✅ Location saved successfully');
+                } else {
+                    console.error('❌ Failed to save location:', result.error);
                 }
             }
         }
 
         async function saveDayCity(dateKey, city) {
+            console.log('🌍 saveDayCity:', dateKey, city);
             const c = city.trim();
             if (c && c !== 'Ville (météo)') {
                 // Fusionner avec les valeurs existantes
                 const existing = dayCustomizations[dateKey] || {};
+                console.log('Existing data:', existing);
                 const result = await saveDayCustomization(currentProject, dateKey, {
                     label: existing.label,
                     location: existing.location,
                     city: c
                 });
 
+                console.log('Save result:', result);
                 // Mettre à jour le cache local
                 if (result.success) {
                     dayCustomizations[dateKey] = {
                         ...existing,
                         city: c
                     };
+                    console.log('✅ City saved successfully');
+                } else {
+                    console.error('❌ Failed to save city:', result.error);
                 }
 
                 // Recharger la météo pour ce jour
