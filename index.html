@@ -1042,6 +1042,40 @@
             flex-shrink: 0;
             background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
             border-radius: 16px 16px 0 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+        }
+
+        .day-weather {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 12px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .day-weather-icon {
+            width: 32px;
+            height: 32px;
+        }
+
+        .day-weather-temp {
+            font-size: 18px;
+            font-weight: 700;
+            color: #228be6;
+        }
+
+        .day-weather-desc {
+            font-size: 11px;
+            color: #868e96;
+            text-transform: capitalize;
         }
         .day-number {
             font-size: 12px;
@@ -2283,6 +2317,9 @@
     <!-- Validation des fichiers -->
     <script src="file-validation.js"></script>
 
+    <!-- Météo OpenWeatherMap -->
+    <script src="weather.js"></script>
+
     <!-- Intégration Supabase -->
     <script src="app-supabase.js?v=13"></script>
 
@@ -3364,8 +3401,11 @@
                 const cardsHTML = cardsWithButtons.join('');
 
                 return `
-                    <div class="day-column-trello" data-date="${dateKey}">
+                    <div class="day-column-trello" data-date="${dateKey}" data-location="${autoLocation || ''}">
                         <div class="day-column-header">
+                            <div class="day-weather" id="weather-${dateKey}">
+                                <div style="font-size: 11px; color: #adb5bd;">Chargement...</div>
+                            </div>
                             <div class="day-number" contenteditable="true" onclick="this.focus()" onblur="saveDayLabel('${dateKey}', this.textContent)" title="Cliquez pour modifier">${dayLabel}</div>
                             <div class="day-date" onclick="editDayDate('${dateKey}', '${formattedDate}')" style="cursor: pointer;" title="Cliquez pour modifier la date">${formattedDate}</div>
                             <div class="day-location" contenteditable="true" onclick="this.focus()" onblur="saveDayLocation('${dateKey}', this.textContent.replace('📍 ', ''))" title="Cliquez pour modifier">📍 ${autoLocation || 'Ajouter un lieu'}</div>
@@ -3382,6 +3422,44 @@
             }).join('');
 
             document.getElementById('planningBoard').innerHTML = columnsHTML;
+
+            // Charger la météo pour chaque jour
+            loadWeatherForAllDays();
+        }
+
+        // Charger la météo pour tous les jours
+        async function loadWeatherForAllDays() {
+            const dayColumns = document.querySelectorAll('.day-column-trello');
+
+            dayColumns.forEach(async (column) => {
+                const dateKey = column.dataset.date;
+                const location = column.dataset.location;
+                const weatherEl = document.getElementById(`weather-${dateKey}`);
+
+                if (!location || !weatherEl) {
+                    if (weatherEl) {
+                        weatherEl.style.display = 'none';
+                    }
+                    return;
+                }
+
+                // Récupérer la météo
+                const result = await getWeatherWithCache(location, dateKey);
+
+                if (result.success && result.weather) {
+                    const { temp, description, icon } = result.weather;
+                    weatherEl.innerHTML = `
+                        <img src="${getWeatherIconUrl(icon)}" alt="${description}" class="day-weather-icon">
+                        <div>
+                            <div class="day-weather-temp">${temp}°C</div>
+                            <div class="day-weather-desc">${description}</div>
+                        </div>
+                    `;
+                } else {
+                    // Masquer si pas de météo
+                    weatherEl.style.display = 'none';
+                }
+            });
         }
 
         // Render activity card for Trello view

@@ -21,3 +21,10 @@ const SUPABASE_CONFIG = {
 
 // ⚠️ IMPORTANT : JAMAIS mettre la service_role key ici !
 // La service_role key doit rester SECRÈTE et utilisée uniquement côté serveur
+
+// Configuration OpenWeatherMap
+const WEATHER_CONFIG = {
+    apiKey: 'VOTRE_CLE_API_OPENWEATHERMAP_ICI', // Remplacez par votre vraie clé API
+    units: 'metric', // Pour avoir les températures en Celsius
+    lang: 'fr' // Pour avoir les descriptions en français
+};
