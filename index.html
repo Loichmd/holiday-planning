@@ -3613,15 +3613,30 @@
 
         // Add activity at a specific position in the day
         function addActivityAtPosition(dateKey, time, position) {
-            // Pre-fill the form with date and time
-            currentEditingActivity = null;
+            // Reset everything like openActivityModal does
+            editingActivity = null;
+            currentAttachments = [];
 
-            // Show the modal
-            document.getElementById('activityModal').classList.add('show');
+            // Reset form
+            document.getElementById('modalTitle').textContent = 'Nouvelle activité';
+            document.getElementById('activityForm').reset();
+
+            // Reset category to default
+            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('[data-category="activite"]').classList.add('active');
+
+            // Clear attachments
+            document.getElementById('attachmentList').innerHTML = '';
+
+            // Hide delete button
+            document.getElementById('deleteBtn').style.display = 'none';
 
             // Pre-fill date and time
             document.getElementById('activityDate').value = dateKey;
             document.getElementById('activityTime').value = time;
+
+            // Show the modal
+            document.getElementById('activityModal').classList.add('show');
 
             // Focus on title field
             setTimeout(() => {
