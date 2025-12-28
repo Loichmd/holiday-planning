@@ -606,7 +606,8 @@ async function saveDayCustomization(projectId, dateKey, { label, location, city 
         const upsertData = {
             user_id: currentUser.id,
             project_id: projectId,
-            date_key: dateKey,
+            date: dateKey, // Pour la colonne DATE (NOT NULL)
+            date_key: dateKey, // Pour la nouvelle colonne TEXT
             custom_label: label || null,
             custom_location: location || null,
             city_name: city || null,
