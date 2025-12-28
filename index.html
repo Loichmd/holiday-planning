@@ -3273,6 +3273,7 @@
         // ============================
         let currentView = 'timeline';
         let currentDisplayYear = new Date().getFullYear();
+        let dayCustomizations = {}; // Store day customizations globally
         
         async function switchView(view) {
             currentView = view;
@@ -3357,7 +3358,8 @@
 
             // Load saved customizations from Supabase
             const customizationsResult = await loadDayCustomizations(currentProject);
-            const savedCustomizations = customizationsResult.success ? customizationsResult.customizations : {};
+            dayCustomizations = customizationsResult.success ? customizationsResult.customizations : {};
+            const savedCustomizations = dayCustomizations;
 
             // Generate columns for each day
             const columnsHTML = sortedDates.map((dateKey, index) => {
@@ -3750,9 +3752,21 @@
 
         // Save custom day label (ex: "Jour de départ" instead of "Jour 1")
         async function saveDayLabel(dateKey, label) {
-            await saveDayCustomization(currentProject, dateKey, {
-                label: label.trim()
+            // Fusionner avec les valeurs existantes
+            const existing = dayCustomizations[dateKey] || {};
+            const result = await saveDayCustomization(currentProject, dateKey, {
+                label: label.trim(),
+                location: existing.location,
+                city: existing.city
             });
+
+            // Mettre à jour le cache local
+            if (result.success) {
+                dayCustomizations[dateKey] = {
+                    ...existing,
+                    label: label.trim()
+                };
+            }
         }
 
         // Edit day date with a calendar input
@@ -3820,18 +3834,43 @@
         async function saveDayLocation(dateKey, location) {
             const loc = location.trim();
             if (loc && loc !== 'Région/Catégorie') {
-                await saveDayCustomization(currentProject, dateKey, {
-                    location: loc
+                // Fusionner avec les valeurs existantes
+                const existing = dayCustomizations[dateKey] || {};
+                const result = await saveDayCustomization(currentProject, dateKey, {
+                    label: existing.label,
+                    location: loc,
+                    city: existing.city
                 });
+
+                // Mettre à jour le cache local
+                if (result.success) {
+                    dayCustomizations[dateKey] = {
+                        ...existing,
+                        location: loc
+                    };
+                }
             }
         }
 
         async function saveDayCity(dateKey, city) {
             const c = city.trim();
             if (c && c !== 'Ville (météo)') {
-                await saveDayCustomization(currentProject, dateKey, {
+                // Fusionner avec les valeurs existantes
+                const existing = dayCustomizations[dateKey] || {};
+                const result = await saveDayCustomization(currentProject, dateKey, {
+                    label: existing.label,
+                    location: existing.location,
                     city: c
                 });
+
+                // Mettre à jour le cache local
+                if (result.success) {
+                    dayCustomizations[dateKey] = {
+                        ...existing,
+                        city: c
+                    };
+                }
+
                 // Recharger la météo pour ce jour
                 loadWeatherForDay(dateKey, c);
             }
