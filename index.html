@@ -3545,49 +3545,50 @@
             // Show/hide clear button
             clearBtn.style.display = searchTerm ? 'flex' : 'none';
 
-            // Get all activity cards
-            const cards = document.querySelectorAll('.activity-card-trello');
-
-            cards.forEach(card => {
-                const title = card.querySelector('.activity-card-title')?.textContent.toLowerCase() || '';
-                const location = card.querySelector('.activity-card-location')?.textContent.toLowerCase() || '';
-
-                // Check if title or location contains the search term
-                const matches = title.includes(searchTerm) || location.includes(searchTerm);
-
-                // Show/hide card with smooth transition
-                if (matches || searchTerm === '') {
+            // Si pas de recherche, tout afficher
+            if (searchTerm === '') {
+                document.querySelectorAll('.activity-card-trello').forEach(card => {
                     card.style.display = '';
                     card.style.opacity = '1';
-                } else {
-                    card.style.opacity = '0';
-                    setTimeout(() => {
-                        if (!card.querySelector('.activity-card-title')?.textContent.toLowerCase().includes(searchTerm)) {
-                            card.style.display = 'none';
-                        }
-                    }, 200);
-                }
-            });
+                });
+                document.querySelectorAll('.day-column-trello').forEach(column => {
+                    column.style.opacity = '1';
+                });
+                return;
+            }
 
-            // Hide empty day columns
+            // Filtrer les cartes d'activités
             const dayColumns = document.querySelectorAll('.day-column-trello');
-            dayColumns.forEach(column => {
-                const visibleCards = column.querySelectorAll('.activity-card-trello[style*="display: block"], .activity-card-trello:not([style*="display: none"])');
-                const cardsContainer = column.querySelector('.day-activities-trello');
-                const allCards = cardsContainer?.querySelectorAll('.activity-card-trello') || [];
 
-                // Check if at least one card is visible
+            dayColumns.forEach(column => {
+                const cards = column.querySelectorAll('.activity-card-trello');
                 let hasVisibleCard = false;
-                allCards.forEach(card => {
-                    if (card.style.display !== 'none') {
+
+                cards.forEach(card => {
+                    const title = card.querySelector('.activity-card-title')?.textContent.toLowerCase() || '';
+                    const location = card.querySelector('.activity-card-location')?.textContent.toLowerCase() || '';
+
+                    // Check if title or location contains the search term
+                    const matches = title.includes(searchTerm) || location.includes(searchTerm);
+
+                    // Show/hide card
+                    if (matches) {
+                        card.style.display = '';
+                        card.style.opacity = '1';
                         hasVisibleCard = true;
+                    } else {
+                        card.style.opacity = '0';
+                        setTimeout(() => {
+                            card.style.display = 'none';
+                        }, 200);
                     }
                 });
 
-                if (!hasVisibleCard && searchTerm !== '') {
-                    column.style.opacity = '0.3';
-                } else {
+                // Diminuer l'opacité des colonnes sans résultats
+                if (hasVisibleCard) {
                     column.style.opacity = '1';
+                } else {
+                    column.style.opacity = '0.3';
                 }
             });
         }
