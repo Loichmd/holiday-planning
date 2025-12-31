@@ -823,6 +823,11 @@
             flex: 1;
             font-size: 14px;
             color: #495057;
+            transition: color 0.2s, text-decoration 0.2s;
+        }
+        .attachment-name:hover {
+            color: #1971c2 !important;
+            text-decoration: none !important;
         }
         .attachment-remove {
             padding: 6px 12px;
@@ -3934,12 +3939,41 @@
                 return `
                     <div class="attachment-item">
                         <span class="attachment-icon">${icon}</span>
-                        <span class="attachment-name">${att.name}</span>
+                        <span class="attachment-name" onclick="openAttachment(${idx})" style="cursor: pointer; color: #228be6; text-decoration: underline;" title="Cliquer pour ouvrir">${att.name}</span>
                         ${size ? `<span class="attachment-size">${size}</span>` : ''}
                         <button class="attachment-remove" onclick="removeAttachment(${idx})">✕</button>
                     </div>
                 `;
             }).join('');
+        }
+
+        function openAttachment(index) {
+            const att = currentAttachments[index];
+            if (!att) return;
+
+            // Si c'est une URL Supabase (fichier déjà uploadé)
+            if (att.url) {
+                window.open(att.url, '_blank');
+            }
+            // Si c'est un fichier local (data URI)
+            else if (att.data) {
+                const blob = dataURItoBlob(att.data);
+                const url = URL.createObjectURL(blob);
+                window.open(url, '_blank');
+                // Libérer la mémoire après quelques secondes
+                setTimeout(() => URL.revokeObjectURL(url), 5000);
+            }
+        }
+
+        function dataURItoBlob(dataURI) {
+            const byteString = atob(dataURI.split(',')[1]);
+            const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+            }
+            return new Blob([ab], { type: mimeString });
         }
 
         function handleFilesWithValidation(files) {
