@@ -996,7 +996,56 @@
         .planning-subtitle {
             font-size: 14px;
             color: #868e96;
-            margin: 0;
+            margin: 0 0 16px 0;
+        }
+
+        /* Barre de recherche discrète */
+        .planning-search-container {
+            position: relative;
+            max-width: 400px;
+            margin-top: 16px;
+        }
+        .planning-search-input {
+            width: 100%;
+            padding: 10px 40px 10px 16px;
+            border: 1px solid #dee2e6;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #495057;
+            background: #f8f9fa;
+            transition: all 0.2s;
+            outline: none;
+        }
+        .planning-search-input:focus {
+            background: white;
+            border-color: #228be6;
+            box-shadow: 0 0 0 3px rgba(34, 139, 230, 0.1);
+        }
+        .planning-search-input::placeholder {
+            color: #adb5bd;
+        }
+        .planning-search-clear {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: #868e96;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .planning-search-clear:hover {
+            background: #e9ecef;
+            color: #495057;
         }
 
         /* Container horizontal scroll */
@@ -1032,6 +1081,7 @@
             background: white;
             border-radius: 16px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            transition: opacity 0.3s ease;
             display: flex;
             flex-direction: column;
             max-height: calc(100vh - 200px);
@@ -1153,7 +1203,7 @@
             padding: 14px;
             margin-bottom: 10px;
             cursor: grab;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
             border-left: 4px solid #228be6;
             box-shadow: 0 1px 3px rgba(0,0,0,0.08);
             user-select: none;
@@ -2092,6 +2142,10 @@
                     </div>
                     <h2 class="planning-main-title">Planning du voyage</h2>
                     <p class="planning-subtitle">Organisez vos activités jour par jour</p>
+                    <div class="planning-search-container">
+                        <input type="text" id="planningSearch" class="planning-search-input" placeholder="🔍 Rechercher une activité (nom ou lieu)..." oninput="filterPlanningActivities()">
+                        <button class="planning-search-clear" onclick="clearPlanningSearch()" style="display: none;">✕</button>
+                    </div>
                 </div>
                 <div class="planning-board" id="planningBoard">
                     <!-- Les colonnes jour seront générées ici -->
@@ -3477,6 +3531,72 @@
                 // Masquer si pas de météo
                 weatherEl.style.display = 'none';
             }
+        }
+
+        // ============================================
+        // PLANNING SEARCH & FILTER
+        // ============================================
+
+        function filterPlanningActivities() {
+            const searchInput = document.getElementById('planningSearch');
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const clearBtn = document.querySelector('.planning-search-clear');
+
+            // Show/hide clear button
+            clearBtn.style.display = searchTerm ? 'flex' : 'none';
+
+            // Get all activity cards
+            const cards = document.querySelectorAll('.activity-card-trello');
+
+            cards.forEach(card => {
+                const title = card.querySelector('.activity-card-title')?.textContent.toLowerCase() || '';
+                const location = card.querySelector('.activity-card-location')?.textContent.toLowerCase() || '';
+
+                // Check if title or location contains the search term
+                const matches = title.includes(searchTerm) || location.includes(searchTerm);
+
+                // Show/hide card with smooth transition
+                if (matches || searchTerm === '') {
+                    card.style.display = '';
+                    card.style.opacity = '1';
+                } else {
+                    card.style.opacity = '0';
+                    setTimeout(() => {
+                        if (!card.querySelector('.activity-card-title')?.textContent.toLowerCase().includes(searchTerm)) {
+                            card.style.display = 'none';
+                        }
+                    }, 200);
+                }
+            });
+
+            // Hide empty day columns
+            const dayColumns = document.querySelectorAll('.day-column-trello');
+            dayColumns.forEach(column => {
+                const visibleCards = column.querySelectorAll('.activity-card-trello[style*="display: block"], .activity-card-trello:not([style*="display: none"])');
+                const cardsContainer = column.querySelector('.day-activities-trello');
+                const allCards = cardsContainer?.querySelectorAll('.activity-card-trello') || [];
+
+                // Check if at least one card is visible
+                let hasVisibleCard = false;
+                allCards.forEach(card => {
+                    if (card.style.display !== 'none') {
+                        hasVisibleCard = true;
+                    }
+                });
+
+                if (!hasVisibleCard && searchTerm !== '') {
+                    column.style.opacity = '0.3';
+                } else {
+                    column.style.opacity = '1';
+                }
+            });
+        }
+
+        function clearPlanningSearch() {
+            const searchInput = document.getElementById('planningSearch');
+            searchInput.value = '';
+            filterPlanningActivities();
+            searchInput.focus();
         }
 
         // Render activity card for Trello view
