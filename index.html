@@ -487,11 +487,22 @@
             }
         }
         
+        /* Unified Header - Persistent across all views */
+        .unified-header {
+            padding: 16px 24px;
+            background: white;
+            border-bottom: 1px solid #e9ecef;
+            flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
         .content-header {
             padding: 24px;
             background: white;
             border-bottom: 1px solid #e9ecef;
             flex-shrink: 0;
+            display: none; /* Hidden by default, replaced by unified-header */
         }
         .content-title {
             font-size: 24px;
@@ -934,6 +945,10 @@
             margin: 0;
         }
         .project-selector-planning {
+            flex-shrink: 0;
+            position: relative;
+        }
+        .project-selector-unified {
             flex-shrink: 0;
             position: relative;
         }
@@ -2301,73 +2316,36 @@
         
         <!-- Main Content (Events) -->
         <div class="main-content">
-            <div class="content-header">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <div class="view-tabs">
-                        <button class="view-tab active" onclick="switchMainView('planning')">
-                            📊 Planning Hebdomadaire
+            <!-- Global Unified Header (persistent across all views) -->
+            <div class="unified-header">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="view-tabs" id="unifiedViewTabs">
+                        <button class="view-tab active" onclick="switchMainView('planning')" data-view="planning">
+                            📊 Planning
                         </button>
-                        <button class="view-tab" onclick="switchMainView('poi')">
+                        <button class="view-tab" onclick="switchMainView('poi')" data-view="poi">
                             📍 Points d'intérêt
                         </button>
-                        <button class="view-tab" onclick="switchMainView('map')">
+                        <button class="view-tab" onclick="switchMainView('map')" data-view="map">
                             🗺️ Carte
                         </button>
                     </div>
                     <div style="display: flex; align-items: center; gap: 12px;">
-                        <div class="project-selector-calendar">
-                            <button class="project-btn" onclick="toggleProjectDropdown()">
-                                <span id="currentProjectNameCalendar">Mes Projets</span>
+                        <div class="project-selector-unified">
+                            <button class="project-btn" onclick="toggleProjectDropdownUnified()">
+                                <span id="currentProjectNameUnified">Mes Projets</span>
                                 <span style="margin-left: auto;">▼</span>
                             </button>
-                            <div class="project-dropdown" id="projectDropdownCalendar"></div>
+                            <div class="project-dropdown" id="projectDropdownUnified"></div>
                         </div>
-                        <button class="btn-icon user-avatar" id="userAvatarCalendar" onclick="toggleUserMenu()" title="Menu utilisateur">U</button>
-                    </div>
-                </div>
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <button class="nav-btn" onclick="previousDay()" title="Jour précédent">‹</button>
-                    <div style="flex: 1; text-align: center;">
-                        <h2 class="content-title" id="contentTitle" style="margin: 0;">Aujourd'hui</h2>
-                        <p class="content-subtitle" id="contentSubtitle" style="margin: 0;">Aucune activité prévue</p>
-                    </div>
-                    <button class="nav-btn" onclick="nextDay()" title="Jour suivant">›</button>
-                </div>
-            </div>
-            
-            <div class="events-container" id="timelineContainer">
-                <div class="events-timeline" id="eventsTimeline">
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📅</div>
-                        <div class="empty-state-text">Aucune activité ce jour</div>
-                        <div class="empty-state-hint">Cliquez sur + pour ajouter une activité</div>
+                        <button class="btn-icon user-avatar" id="userAvatarUnified" onclick="toggleUserMenu()" title="Menu utilisateur">U</button>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Planning View - Trello Style -->
             <div class="planning-view" id="planningView">
                 <div class="planning-header">
-                    <div class="planning-header-top">
-                        <div class="view-tabs">
-                            <button class="view-tab" onclick="switchMainView('calendar')">
-                                📊 Planning Hebdomadaire
-                            </button>
-                            <button class="view-tab" onclick="switchMainView('poi')">
-                                📍 Points d'intérêt
-                            </button>
-                            <button class="view-tab" onclick="switchMainView('map')">
-                                🗺️ Carte
-                            </button>
-                        </div>
-                        <div class="project-selector-planning">
-                            <button class="project-btn" onclick="toggleProjectDropdownPlanning()">
-                                <span id="currentProjectNamePlanning">Mes Projets</span>
-                                <span style="margin-left: auto;">▼</span>
-                            </button>
-                            <div class="project-dropdown" id="projectDropdownPlanning"></div>
-                        </div>
-                    </div>
                     <h2 class="planning-main-title">Planning du voyage</h2>
                     <p class="planning-subtitle">Organisez vos activités jour par jour</p>
                     <div class="planning-search-container">
@@ -2383,25 +2361,6 @@
 
         <!-- Map View -->
         <div class="map-view" id="mapView">
-            <!-- Map Header with Tabs (Desktop only) -->
-            <div class="map-header">
-                <div class="view-tabs">
-                    <button class="view-tab" onclick="switchMainView('calendar')">
-                        📊 Planning Hebdomadaire
-                    </button>
-                    <button class="view-tab active" onclick="switchMainView('map')">
-                        🗺️ Carte
-                    </button>
-                </div>
-                <div class="project-selector-map">
-                    <button class="project-btn" onclick="toggleProjectDropdownMap()">
-                        <span id="currentProjectNameMap">Mes Projets</span>
-                        <span style="margin-left: auto;">▼</span>
-                    </button>
-                    <div class="project-dropdown" id="projectDropdownMap"></div>
-                </div>
-            </div>
-
             <div class="day-selector" id="daySelector">
                 <!-- Day chips will be generated here -->
             </div>
@@ -2425,17 +2384,6 @@
             <!-- POI Sidebar (Left) -->
             <div class="poi-sidebar">
                 <div class="poi-sidebar-header">
-                    <div class="view-tabs-vertical">
-                        <button class="view-tab" onclick="switchMainView('planning')">
-                            📊 Planning
-                        </button>
-                        <button class="view-tab active" onclick="switchMainView('poi')">
-                            📍 POI
-                        </button>
-                        <button class="view-tab" onclick="switchMainView('map')">
-                            🗺️ Carte
-                        </button>
-                    </div>
                     <h3 class="poi-sidebar-title">Points d'intérêt</h3>
                     <button class="btn-primary" onclick="openPOIModal()" style="width: 100%; margin-bottom: 16px;">
                         ➕ Nouveau POI
@@ -2815,7 +2763,10 @@
 
             const initials = currentUser.email ? currentUser.email.substring(0, 2).toUpperCase() : 'U';
             document.getElementById('userAvatar').textContent = initials;
-            document.getElementById('userAvatarCalendar').textContent = initials;
+            const userAvatarCalendar = document.getElementById('userAvatarCalendar');
+            if (userAvatarCalendar) userAvatarCalendar.textContent = initials;
+            const userAvatarUnified = document.getElementById('userAvatarUnified');
+            if (userAvatarUnified) userAvatarUnified.textContent = initials;
             document.getElementById('userName').textContent = currentUser.email || 'Utilisateur';
             document.getElementById('userEmail').textContent = currentUser.email || '';
 
@@ -3311,13 +3262,20 @@
             const dropdownPlanning = document.getElementById('projectDropdownPlanning');
             const dropdownCalendar = document.getElementById('projectDropdownCalendar');
             const dropdownMap = document.getElementById('projectDropdownMap');
+            const dropdownUnified = document.getElementById('projectDropdownUnified');
             const currentProj = projects.find(p => p.id === currentProject);
 
             document.getElementById('currentProjectName').textContent = currentProj ? currentProj.name : 'Mes Projets';
-            document.getElementById('currentProjectNamePlanning').textContent = currentProj ? currentProj.name : 'Mes Projets';
-            document.getElementById('currentProjectNameCalendar').textContent = currentProj ? currentProj.name : 'Mes Projets';
+            if (document.getElementById('currentProjectNamePlanning')) {
+                document.getElementById('currentProjectNamePlanning').textContent = currentProj ? currentProj.name : 'Mes Projets';
+            }
+            if (document.getElementById('currentProjectNameCalendar')) {
+                document.getElementById('currentProjectNameCalendar').textContent = currentProj ? currentProj.name : 'Mes Projets';
+            }
             const mapNameEl = document.getElementById('currentProjectNameMap');
             if (mapNameEl) mapNameEl.textContent = currentProj ? currentProj.name : 'Mes Projets';
+            const unifiedNameEl = document.getElementById('currentProjectNameUnified');
+            if (unifiedNameEl) unifiedNameEl.textContent = currentProj ? currentProj.name : 'Mes Projets';
 
             // Afficher/cacher le bouton de partage et les collaborateurs
             if (currentProject) {
@@ -3361,6 +3319,9 @@
             if (dropdownMap) {
                 dropdownMap.innerHTML = dropdownHTML;
             }
+            if (dropdownUnified) {
+                dropdownUnified.innerHTML = dropdownHTML;
+            }
         }
 
         function toggleProjectDropdown() {
@@ -3373,6 +3334,10 @@
 
         function toggleProjectDropdownMap() {
             document.getElementById('projectDropdownMap').classList.toggle('show');
+        }
+
+        function toggleProjectDropdownUnified() {
+            document.getElementById('projectDropdownUnified').classList.toggle('show');
         }
 
         function toggleUserMenu() {
@@ -3808,8 +3773,8 @@
                 return `
                     <div class="day-column-trello" data-date="${dateKey}" data-city="${cityName || ''}">
                         <div class="day-column-header">
-                            <div class="day-weather" id="weather-${dateKey}">
-                                <div style="font-size: 11px; color: #adb5bd;">Chargement...</div>
+                            <div class="day-weather" id="weather-${dateKey}" style="display: none;">
+                                <!-- Weather will be loaded dynamically -->
                             </div>
                             <div class="day-number" contenteditable="true" onclick="this.focus()" onblur="saveDayLabel('${dateKey}', this.textContent)" title="Cliquez pour modifier">${dayLabel}</div>
                             <div class="day-date" onclick="editDayDate('${dateKey}', '${formattedDate}')" style="cursor: pointer;" title="Cliquez pour modifier la date">${formattedDate}</div>
@@ -3858,20 +3823,30 @@
                 return;
             }
 
-            // Récupérer la météo
-            const result = await getWeatherWithCache(city, dateKey);
+            // Afficher un indicateur de chargement
+            weatherEl.innerHTML = '<div style="font-size: 11px; color: #adb5bd;">Chargement...</div>';
+            weatherEl.style.display = 'flex';
 
-            if (result.success && result.weather) {
-                const { temp, description, icon } = result.weather;
-                weatherEl.innerHTML = `
-                    <img src="${getWeatherIconUrl(icon)}" alt="${description}" class="day-weather-icon">
-                    <div>
-                        <div class="day-weather-temp">${temp}°C</div>
-                        <div class="day-weather-desc">${description}</div>
-                    </div>
-                `;
-            } else {
-                // Masquer si pas de météo
+            try {
+                // Récupérer la météo
+                const result = await getWeatherWithCache(city, dateKey);
+
+                if (result.success && result.weather) {
+                    const { temp, description, icon } = result.weather;
+                    weatherEl.innerHTML = `
+                        <img src="${getWeatherIconUrl(icon)}" alt="${description}" class="day-weather-icon">
+                        <div>
+                            <div class="day-weather-temp">${temp}°C</div>
+                            <div class="day-weather-desc">${description}</div>
+                        </div>
+                    `;
+                } else {
+                    // Masquer si pas de météo
+                    weatherEl.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error loading weather:', error);
+                // Masquer en cas d'erreur
                 weatherEl.style.display = 'none';
             }
         }
@@ -4502,6 +4477,14 @@
             console.log('switchMainView called with:', viewName);
 
             try {
+                // Update unified header tabs active state
+                document.querySelectorAll('#unifiedViewTabs .view-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                    if (tab.dataset.view === viewName) {
+                        tab.classList.add('active');
+                    }
+                });
+
                 // Update bottom nav active state
                 document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
                     item.classList.remove('active');
@@ -4510,31 +4493,15 @@
                     }
                 });
 
-                // Get elements
-                const contentHeader = document.querySelector('.content-header');
-                const timelineContainer = document.getElementById('timelineContainer');
+                // Get view elements
                 const planningView = document.getElementById('planningView');
                 const poiView = document.getElementById('poiView');
                 const mapView = document.getElementById('mapView');
 
-                console.log('Elements found:', {
-                    contentHeader: !!contentHeader,
-                    timelineContainer: !!timelineContainer,
-                    planningView: !!planningView,
-                    poiView: !!poiView,
-                    mapView: !!mapView
-                });
-
                 // Hide all views
-                if (timelineContainer) timelineContainer.style.display = 'none';
                 if (planningView) planningView.style.display = 'none';
                 if (poiView) poiView.style.display = 'none';
                 if (mapView) mapView.style.display = 'none';
-
-                // Hide content header for all views (we use view-specific headers now)
-                if (contentHeader) {
-                    contentHeader.style.display = 'none';
-                }
 
                 // Show selected view
                 if (viewName === 'planning') {
@@ -4543,7 +4510,7 @@
                         planningView.style.display = 'block';
                     }
                     currentView = 'planning';
-                    switchView('planning'); // Also trigger the desktop view switch
+                    renderPlanningView();
                 } else if (viewName === 'poi') {
                     console.log('Showing POI view');
                     if (poiView) {
