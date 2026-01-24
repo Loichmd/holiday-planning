@@ -2270,9 +2270,6 @@
             <div class="content-header">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <div class="view-tabs">
-                        <button class="view-tab" onclick="switchMainView('calendar')">
-                            📅 Vue Calendrier
-                        </button>
                         <button class="view-tab active" onclick="switchMainView('planning')">
                             📊 Planning Hebdomadaire
                         </button>
@@ -2320,9 +2317,6 @@
                     <div class="planning-header-top">
                         <div class="view-tabs">
                             <button class="view-tab" onclick="switchMainView('calendar')">
-                                📅 Vue Calendrier
-                            </button>
-                            <button class="view-tab active" onclick="switchMainView('planning')">
                                 📊 Planning Hebdomadaire
                             </button>
                             <button class="view-tab" onclick="switchMainView('poi')">
@@ -2359,9 +2353,6 @@
             <div class="map-header">
                 <div class="view-tabs">
                     <button class="view-tab" onclick="switchMainView('calendar')">
-                        📅 Vue Calendrier
-                    </button>
-                    <button class="view-tab" onclick="switchMainView('planning')">
                         📊 Planning Hebdomadaire
                     </button>
                     <button class="view-tab active" onclick="switchMainView('map')">
@@ -2401,9 +2392,6 @@
                 <div class="poi-header-top">
                     <div class="view-tabs">
                         <button class="view-tab" onclick="switchMainView('calendar')">
-                            📅 Vue Calendrier
-                        </button>
-                        <button class="view-tab" onclick="switchMainView('planning')">
                             📊 Planning Hebdomadaire
                         </button>
                         <button class="view-tab active" onclick="switchMainView('poi')">
@@ -2438,12 +2426,6 @@
 
         <!-- Bottom Navigation (Mobile only) -->
         <nav class="bottom-nav">
-            <button class="nav-item" onclick="switchMainView('calendar')" data-view="calendar">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span>Calendrier</span>
-            </button>
             <button class="nav-item active" onclick="switchMainView('planning')" data-view="planning">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
@@ -4493,20 +4475,13 @@
                 if (poiView) poiView.style.display = 'none';
                 if (mapView) mapView.style.display = 'none';
 
-                // Show/hide content header based on view
+                // Hide content header for all views (we use view-specific headers now)
                 if (contentHeader) {
-                    contentHeader.style.display = (viewName === 'calendar') ? 'block' : 'none';
+                    contentHeader.style.display = 'none';
                 }
 
                 // Show selected view
-                if (viewName === 'calendar') {
-                    console.log('Showing calendar view');
-                    if (timelineContainer) {
-                        timelineContainer.style.display = 'block';
-                    }
-                    currentView = 'timeline';
-                    switchView('timeline'); // Also trigger the desktop view switch
-                } else if (viewName === 'planning') {
+                if (viewName === 'planning') {
                     console.log('Showing planning view');
                     if (planningView) {
                         planningView.style.display = 'block';
