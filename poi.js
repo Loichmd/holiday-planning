@@ -4,6 +4,8 @@
 
 let currentPOIs = [];
 let editingPOI = null;
+let poiMap = null;
+let poiMarkers = [];
 
 // ============================================
 // POI VIEW RENDERING
@@ -16,48 +18,41 @@ async function renderPOIView() {
     const result = await loadPOIs(currentProject);
     currentPOIs = result.success ? result.pois : [];
 
-    const poiContent = document.getElementById('poiContent');
+    // Render sidebar list
+    renderPOISidebar();
 
-    if (currentPOIs.length === 0) {
-        poiContent.innerHTML = `
+    // Initialize map if not already done
+    if (!poiMap) {
+        initializePOIMap();
+    }
+
+    // Display POI markers on map
+    displayPOIMarkers();
+}
+
+function renderPOISidebar() {
+    const sidebarContent = document.getElementById('poiSidebarList');
+
+    if (!currentPOIs || currentPOIs.length === 0) {
+        sidebarContent.innerHTML = `
             <div class="poi-empty-state">
                 <div class="poi-empty-state-icon">📍</div>
                 <div class="poi-empty-state-title">Aucun point d'intérêt</div>
-                <div class="poi-empty-state-text">Ajoutez des lieux à visiter pour organiser votre voyage</div>
-                <button class="btn-primary" onclick="openPOIModal()">Ajouter un point d'intérêt</button>
+                <div class="poi-empty-state-text">Ajoutez des lieux à visiter pour préparer votre voyage</div>
             </div>
         `;
         return;
     }
 
-    // Group POIs by assignment status
-    const unassigned = currentPOIs.filter(poi => !poi.assigned_date);
-    const assigned = currentPOIs.filter(poi => poi.assigned_date);
-
     let html = '';
+    currentPOIs.forEach(poi => {
+        html += renderPOIListItem(poi);
+    });
 
-    if (unassigned.length > 0) {
-        html += `<div style="grid-column: 1 / -1; font-size: 16px; font-weight: 600; color: #495057; margin-bottom: 8px;">
-            📋 À planifier (${unassigned.length})
-        </div>`;
-        unassigned.forEach(poi => {
-            html += renderPOICard(poi);
-        });
-    }
-
-    if (assigned.length > 0) {
-        html += `<div style="grid-column: 1 / -1; font-size: 16px; font-weight: 600; color: #495057; margin: 32px 0 8px 0;">
-            ✅ Planifiés (${assigned.length})
-        </div>`;
-        assigned.forEach(poi => {
-            html += renderPOICard(poi);
-        });
-    }
-
-    poiContent.innerHTML = html;
+    sidebarContent.innerHTML = html;
 }
 
-function renderPOICard(poi) {
+function renderPOIListItem(poi) {
     const categoryIcons = {
         'activite': '🎯',
         'restaurant': '🍽️',
@@ -75,36 +70,188 @@ function renderPOICard(poi) {
         'si_possible': ''
     }[poi.priority] || '⭐';
 
-    const statusHtml = poi.assigned_date
-        ? `<div class="poi-card-status assigned">Planifié le ${formatDate(poi.assigned_date)}</div>`
-        : `<div class="poi-card-status">Non planifié</div>`;
-
     return `
-        <div class="poi-card" onclick="editPOI('${poi.id}')">
-            <div class="poi-card-header">
-                <div class="poi-card-icon">${icon}</div>
-                <div class="poi-card-priority ${poi.priority}">${priorityLabel} ${poi.priority.replace('_', ' ')}</div>
+        <div class="poi-list-item" data-poi-id="${poi.id}" onclick="focusPOIOnMap('${poi.id}')">
+            <div class="poi-list-item-header">
+                <div class="poi-list-item-icon">${icon}</div>
+                <div class="poi-list-item-priority ${poi.priority}">${priorityLabel}</div>
             </div>
-            <div class="poi-card-name">${poi.name}</div>
-            <div class="poi-card-address">
+            <div class="poi-list-item-name">${poi.name}</div>
+            <div class="poi-list-item-address">
                 <span>📍</span>
                 <span>${poi.address}</span>
             </div>
-            ${poi.notes ? `<div class="poi-card-notes">${poi.notes}</div>` : ''}
-            <div class="poi-card-footer">
-                ${statusHtml}
-                <div class="poi-card-actions" onclick="event.stopPropagation()">
-                    ${!poi.assigned_date ? `<button onclick="quickAssignPOI('${poi.id}')" title="Assigner à un jour">📅</button>` : ''}
-                    <button onclick="deletePOI('${poi.id}')" title="Supprimer">🗑️</button>
-                </div>
+            <div class="poi-list-item-actions" onclick="event.stopPropagation()">
+                <button onclick="editPOI('${poi.id}')" title="Modifier">✏️ Éditer</button>
+                <button onclick="assignPOIPrompt('${poi.id}')" title="Assigner à un jour">📅 Assigner</button>
+                <button onclick="confirmDeletePOI('${poi.id}')" title="Supprimer">🗑️</button>
             </div>
         </div>
     `;
 }
 
-function formatDate(dateStr) {
-    const date = new Date(dateStr + 'T12:00:00');
-    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+// ============================================
+// POI MAP
+// ============================================
+
+function initializePOIMap() {
+    console.log('Initializing POI map');
+
+    if (poiMap) {
+        poiMap.remove();
+    }
+
+    // Initialize Leaflet map
+    poiMap = L.map('poiMap').setView([48.8566, 2.3522], 12); // Paris par défaut
+
+    // Add OpenStreetMap tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+    }).addTo(poiMap);
+
+    // Force map resize after a short delay
+    setTimeout(() => {
+        if (poiMap) {
+            poiMap.invalidateSize();
+        }
+    }, 200);
+}
+
+function displayPOIMarkers() {
+    if (!poiMap) return;
+
+    // Clear existing markers
+    poiMarkers.forEach(marker => marker.remove());
+    poiMarkers = [];
+
+    // Add markers for each POI with coordinates
+    const poisWithCoords = currentPOIs.filter(poi => poi.latitude && poi.longitude);
+
+    if (poisWithCoords.length === 0) {
+        console.log('No POIs with coordinates to display');
+        return;
+    }
+
+    poisWithCoords.forEach(poi => {
+        // Color by priority
+        const markerColors = {
+            'incontournable': '#fa5252',
+            'important': '#fd7e14',
+            'normale': '#228be6',
+            'si_possible': '#868e96'
+        };
+
+        const color = markerColors[poi.priority] || '#228be6';
+
+        // Create custom marker HTML
+        const markerHtml = `
+            <div style="
+                background: ${color};
+                width: 30px;
+                height: 30px;
+                border-radius: 50% 50% 50% 0;
+                border: 3px solid white;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                transform: rotate(-45deg);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            ">
+                <span style="transform: rotate(45deg); font-size: 16px;">${poi.category === 'restaurant' ? '🍽️' : '📍'}</span>
+            </div>
+        `;
+
+        const icon = L.divIcon({
+            html: markerHtml,
+            className: 'custom-poi-marker',
+            iconSize: [30, 30],
+            iconAnchor: [15, 30]
+        });
+
+        const marker = L.marker([poi.latitude, poi.longitude], { icon })
+            .addTo(poiMap)
+            .bindPopup(`
+                <div style="min-width: 200px;">
+                    <strong style="font-size: 16px;">${poi.name}</strong><br>
+                    <span style="color: #868e96; font-size: 13px;">${poi.address}</span><br>
+                    ${poi.notes ? `<p style="margin: 8px 0; font-size: 13px;">${poi.notes}</p>` : ''}
+                    <div style="margin-top: 10px; display: flex; gap: 8px;">
+                        <button onclick="editPOI('${poi.id}')" class="btn btn-secondary" style="flex: 1; padding: 6px 12px; font-size: 12px;">Éditer</button>
+                        <button onclick="assignPOIPrompt('${poi.id}')" class="btn btn-primary" style="flex: 1; padding: 6px 12px; font-size: 12px;">Assigner</button>
+                    </div>
+                </div>
+            `);
+
+        poiMarkers.push(marker);
+    });
+
+    // Fit map to show all markers
+    if (poisWithCoords.length > 0) {
+        const bounds = L.latLngBounds(poisWithCoords.map(poi => [poi.latitude, poi.longitude]));
+        poiMap.fitBounds(bounds, { padding: [50, 50] });
+    }
+}
+
+function focusPOIOnMap(poiId) {
+    const poi = currentPOIs.find(p => p.id === poiId);
+    if (poi && poi.latitude && poi.longitude && poiMap) {
+        poiMap.flyTo([poi.latitude, poi.longitude], 15, {
+            duration: 1
+        });
+
+        // Open popup for this POI
+        const marker = poiMarkers.find(m => {
+            const latlng = m.getLatLng();
+            return latlng.lat === poi.latitude && latlng.lng === poi.longitude;
+        });
+
+        if (marker) {
+            marker.openPopup();
+        }
+    }
+}
+
+// ============================================
+// POI FILTERS
+// ============================================
+
+function filterPOIs() {
+    const searchTerm = document.getElementById('poiFilterSearch').value.toLowerCase();
+    const priorityFilter = document.getElementById('poiFilterPriority').value;
+    const categoryFilter = document.getElementById('poiFilterCategory').value;
+    const statusFilter = document.getElementById('poiFilterStatus').value;
+
+    const items = document.querySelectorAll('.poi-list-item');
+
+    items.forEach(item => {
+        const poiId = item.dataset.poiId;
+        const poi = currentPOIs.find(p => p.id === poiId);
+
+        if (!poi) {
+            item.style.display = 'none';
+            return;
+        }
+
+        // Check filters
+        const matchesSearch = !searchTerm ||
+            poi.name.toLowerCase().includes(searchTerm) ||
+            poi.address.toLowerCase().includes(searchTerm);
+
+        const matchesPriority = !priorityFilter || poi.priority === priorityFilter;
+        const matchesCategory = !categoryFilter || poi.category === categoryFilter;
+
+        const matchesStatus = !statusFilter ||
+            (statusFilter === 'assigned' && poi.assigned_date) ||
+            (statusFilter === 'unassigned' && !poi.assigned_date);
+
+        // Show/hide based on all filters
+        if (matchesSearch && matchesPriority && matchesCategory && matchesStatus) {
+            item.style.display = '';
+        } else {
+            item.style.display = 'none';
+        }
+    });
 }
 
 // ============================================
@@ -116,7 +263,8 @@ function openPOIModal() {
     document.getElementById('poiModalTitle').textContent = 'Nouveau point d\'intérêt';
     document.getElementById('poiForm').reset();
     document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelector('[data-category="activite"]').classList.add('active');
+    const firstCategoryBtn = document.querySelector('[data-category]');
+    if (firstCategoryBtn) firstCategoryBtn.classList.add('active');
     document.getElementById('deletePOIBtn').style.display = 'none';
     document.getElementById('poiModal').classList.add('show');
 }
@@ -213,8 +361,22 @@ async function deleteCurrentPOI() {
     }
 }
 
-// Quick assign POI to a day (will be enhanced later with drag & drop)
-async function quickAssignPOI(poiId) {
+async function confirmDeletePOI(poiId) {
+    const poi = currentPOIs.find(p => p.id === poiId);
+    if (!poi) return;
+
+    if (!confirm(`Supprimer "${poi.name}" ?`)) return;
+
+    const result = await deletePOI(poiId);
+    if (result.success) {
+        renderPOIView();
+    } else {
+        alert('Erreur: ' + result.error);
+    }
+}
+
+// Assign POI to a day with prompt (temporary, will be replaced with drag&drop)
+async function assignPOIPrompt(poiId) {
     const dateInput = prompt('Date d\'assignation (YYYY-MM-DD) :');
     if (!dateInput) return;
 
@@ -223,58 +385,8 @@ async function quickAssignPOI(poiId) {
     const result = await assignPOIToDay(poiId, dateInput, timeInput);
     if (result.success) {
         renderPOIView();
+        alert('✅ POI assigné avec succès !');
     } else {
         alert('Erreur: ' + result.error);
     }
 }
-
-// ============================================
-// PROJECT DROPDOWN FOR POI VIEW
-// ============================================
-
-function toggleProjectDropdownPOI() {
-    const dropdown = document.getElementById('projectDropdownPOI');
-    dropdown.classList.toggle('show');
-
-    if (dropdown.classList.contains('show')) {
-        renderProjectDropdownPOI();
-    }
-}
-
-async function renderProjectDropdownPOI() {
-    const dropdown = document.getElementById('projectDropdownPOI');
-    const result = await loadProjects();
-    const projects = result.success ? result.projects : [];
-
-    dropdown.innerHTML = projects.map(proj => `
-        <div class="project-dropdown-item ${proj.id === currentProject ? 'active' : ''}"
-             onclick="selectProjectPOI('${proj.id}')">
-            <div class="project-dropdown-name">${proj.name}</div>
-        </div>
-    `).join('');
-}
-
-async function selectProjectPOI(projectId) {
-    currentProject = projectId;
-    document.getElementById('projectDropdownPOI').classList.remove('show');
-
-    // Update project name display
-    const result = await loadProjects();
-    const project = result.projects?.find(p => p.id === projectId);
-    if (project) {
-        document.getElementById('currentProjectNamePOI').textContent = project.name;
-    }
-
-    // Reload POIs
-    renderPOIView();
-}
-
-// Close dropdown when clicking outside
-document.addEventListener('click', function(event) {
-    const dropdown = document.getElementById('projectDropdownPOI');
-    const button = event.target.closest('.project-selector-planning .project-btn');
-
-    if (!button && dropdown && !dropdown.contains(event.target)) {
-        dropdown.classList.remove('show');
-    }
-});
