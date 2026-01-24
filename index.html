@@ -2681,6 +2681,9 @@
     <!-- Météo OpenWeatherMap -->
     <script src="weather.js"></script>
 
+    <!-- POI Management -->
+    <script src="poi.js"></script>
+
     <!-- Intégration Supabase -->
     <script src="app-supabase.js?v=13"></script>
 
@@ -4473,18 +4476,21 @@
                 const contentHeader = document.querySelector('.content-header');
                 const timelineContainer = document.getElementById('timelineContainer');
                 const planningView = document.getElementById('planningView');
+                const poiView = document.getElementById('poiView');
                 const mapView = document.getElementById('mapView');
 
                 console.log('Elements found:', {
                     contentHeader: !!contentHeader,
                     timelineContainer: !!timelineContainer,
                     planningView: !!planningView,
+                    poiView: !!poiView,
                     mapView: !!mapView
                 });
 
                 // Hide all views
                 if (timelineContainer) timelineContainer.style.display = 'none';
                 if (planningView) planningView.style.display = 'none';
+                if (poiView) poiView.style.display = 'none';
                 if (mapView) mapView.style.display = 'none';
 
                 // Show/hide content header based on view
@@ -4507,6 +4513,13 @@
                     }
                     currentView = 'planning';
                     switchView('planning'); // Also trigger the desktop view switch
+                } else if (viewName === 'poi') {
+                    console.log('Showing POI view');
+                    if (poiView) {
+                        poiView.style.display = 'flex';
+                    }
+                    currentView = 'poi';
+                    renderPOIView();
                 } else if (viewName === 'map') {
                     console.log('Showing map view');
                     if (mapView) {
