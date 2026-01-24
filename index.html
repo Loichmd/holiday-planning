@@ -236,10 +236,10 @@
             flex-direction: column;
         }
         
-        /* Mobile: Sidebar prend ce qu'il faut */
+        /* Mobile: Cacher le sidebar, utiliser unified-header à la place */
         @media (max-width: 767px) {
             .sidebar {
-                flex-shrink: 0;
+                display: none;
             }
         }
         
@@ -496,6 +496,59 @@
             position: sticky;
             top: 0;
             z-index: 100;
+        }
+
+        /* Responsive: Unified Header pour mobile */
+        @media (max-width: 768px) {
+            .unified-header {
+                padding: 12px 16px;
+                display: block;
+            }
+
+            .unified-header > div {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .view-tabs {
+                width: 100%;
+                display: flex;
+                gap: 8px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+
+            .view-tabs::-webkit-scrollbar {
+                display: none;
+            }
+
+            .view-tab {
+                padding: 8px 16px;
+                font-size: 14px;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+
+            .project-selector-unified {
+                width: 100%;
+            }
+
+            .project-selector-unified .project-btn {
+                width: 100%;
+            }
+        }
+
+        /* Extra small devices */
+        @media (max-width: 375px) {
+            .unified-header {
+                padding: 10px 12px;
+            }
+
+            .view-tab {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
         }
         .content-header {
             padding: 24px;
@@ -1603,14 +1656,14 @@
 /* Show bottom nav on mobile */
 @media (max-width: 767px) {
     .bottom-nav {
-        display: flex;
+        display: none; /* Désactivé car on utilise le unified-header partout */
     }
     .main-content {
-        padding-bottom: 80px;
+        padding-bottom: 0;
     }
-    /* Hide view tabs on mobile when bottom nav is present */
-    .view-tabs {
-        display: none !important;
+    /* Les view-tabs du unified-header restent visibles en mobile */
+    #unifiedViewTabs {
+        display: flex !important;
     }
 }
 
