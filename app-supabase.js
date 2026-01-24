@@ -778,3 +778,205 @@ async function geocodeProjectActivities(projectId) {
         return { success: false, geocoded: 0, failed: 0, error: error.message };
     }
 }
+
+// ============================================
+// POINTS OF INTEREST (POI) FUNCTIONS
+// ============================================
+
+/**
+ * Load all POIs for a project
+ * @param {string} projectId - Project ID
+ * @returns {Promise<{success: boolean, pois?: Array, error?: string}>}
+ */
+async function loadPOIs(projectId) {
+    try {
+        const { data, error } = await supabaseClient
+            .from('points_of_interest')
+            .select('*')
+            .eq('project_id', projectId)
+            .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        return { success: true, pois: data || [] };
+    } catch (error) {
+        console.error('Erreur loadPOIs:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Create a new POI
+ * @param {Object} poiData - POI data
+ * @returns {Promise<{success: boolean, poi?: Object, error?: string}>}
+ */
+async function createPOI(poiData) {
+    try {
+        const { data, error } = await supabaseClient
+            .from('points_of_interest')
+            .insert({
+                user_id: currentUser.id,
+                project_id: poiData.project_id,
+                name: poiData.name,
+                address: poiData.address,
+                category: poiData.category || 'activite',
+                notes: poiData.notes || null,
+                priority: poiData.priority || 'normale',
+                latitude: poiData.latitude || null,
+                longitude: poiData.longitude || null,
+                assigned_date: null,
+                assigned_time: null,
+                order_in_day: null
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        return { success: true, poi: data };
+    } catch (error) {
+        console.error('Erreur createPOI:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Update a POI
+ * @param {string} poiId - POI ID
+ * @param {Object} updates - Fields to update
+ * @returns {Promise<{success: boolean, poi?: Object, error?: string}>}
+ */
+async function updatePOI(poiId, updates) {
+    try {
+        const { data, error } = await supabaseClient
+            .from('points_of_interest')
+            .update({
+                ...updates,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', poiId)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        return { success: true, poi: data };
+    } catch (error) {
+        console.error('Erreur updatePOI:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Delete a POI
+ * @param {string} poiId - POI ID
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+async function deletePOI(poiId) {
+    try {
+        const { error } = await supabaseClient
+            .from('points_of_interest')
+            .delete()
+            .eq('id', poiId);
+
+        if (error) throw error;
+
+        return { success: true };
+    } catch (error) {
+        console.error('Erreur deletePOI:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Assign a POI to a specific day
+ * @param {string} poiId - POI ID
+ * @param {string} dateKey - Date (YYYY-MM-DD)
+ * @param {string} time - Time (HH:MM)
+ * @param {number} order - Order in day
+ * @returns {Promise<{success: boolean, poi?: Object, error?: string}>}
+ */
+async function assignPOIToDay(poiId, dateKey, time = null, order = null) {
+    try {
+        const { data, error } = await supabaseClient
+            .from('points_of_interest')
+            .update({
+                assigned_date: dateKey,
+                assigned_time: time,
+                order_in_day: order,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', poiId)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        return { success: true, poi: data };
+    } catch (error) {
+        console.error('Erreur assignPOIToDay:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Unassign a POI from a day (make it available again)
+ * @param {string} poiId - POI ID
+ * @returns {Promise<{success: boolean, poi?: Object, error?: string}>}
+ */
+async function unassignPOI(poiId) {
+    try {
+        const { data, error } = await supabaseClient
+            .from('points_of_interest')
+            .update({
+                assigned_date: null,
+                assigned_time: null,
+                order_in_day: null,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', poiId)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        return { success: true, poi: data };
+    } catch (error) {
+        console.error('Erreur unassignPOI:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Geocode a POI address
+ * @param {string} poiId - POI ID
+ * @param {string} address - Address to geocode
+ * @returns {Promise<{success: boolean, coordinates?: Object, error?: string}>}
+ */
+async function geocodePOI(poiId, address) {
+    try {
+        // Utiliser la fonction geocodeAddress existante
+        const result = await geocodeAddress(address);
+
+        if (!result.success) {
+            throw new Error(result.error || 'Échec du géocodage');
+        }
+
+        // Mettre à jour le POI avec les coordonnées
+        const { error } = await supabaseClient
+            .from('points_of_interest')
+            .update({
+                latitude: result.coordinates.lat,
+                longitude: result.coordinates.lng,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', poiId);
+
+        if (error) throw error;
+
+        return { success: true, coordinates: result.coordinates };
+    } catch (error) {
+        console.error('Erreur geocodePOI:', error);
+        return { success: false, error: error.message };
+    }
+}
