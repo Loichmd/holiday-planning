@@ -1600,197 +1600,231 @@
 }
 
 /* ============================
-   POI VIEW
+   POI VIEW - Sidebar + Map
    ============================ */
 .poi-view {
     display: none;
-    flex: 1;
-    background: #f8f9fa;
+    flex-direction: row;
+    height: 100vh;
     overflow: hidden;
-    flex-direction: column;
 }
 
-.poi-header {
-    padding: 20px 24px;
+/* Sidebar (Left) */
+.poi-sidebar {
+    width: 400px;
     background: white;
+    border-right: 1px solid #e9ecef;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.poi-sidebar-header {
+    padding: 20px;
     border-bottom: 1px solid #e9ecef;
     flex-shrink: 0;
 }
 
-.poi-header-top {
+.view-tabs-vertical {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    gap: 8px;
     margin-bottom: 20px;
 }
 
-@media (max-width: 767px) {
-    .poi-header-top {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
-    }
+.view-tabs-vertical .view-tab {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 13px;
 }
 
-.poi-content {
+.poi-sidebar-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #212529;
+    margin: 0 0 16px 0;
+}
+
+.poi-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.poi-filter-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.poi-filter-input:focus {
+    border-color: #228be6;
+    box-shadow: 0 0 0 3px rgba(34, 139, 230, 0.1);
+}
+
+.poi-filter-select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.poi-filter-select:focus {
+    border-color: #228be6;
+}
+
+.poi-sidebar-content {
     flex: 1;
     overflow-y: auto;
-    padding: 24px;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 20px;
-    align-content: start;
+    padding: 16px;
 }
 
-@media (max-width: 768px) {
-    .poi-content {
-        grid-template-columns: 1fr;
-    }
-}
-
-.poi-card {
+/* POI List Item (Sidebar) */
+.poi-list-item {
     background: white;
-    border-radius: 16px;
-    padding: 20px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-    transition: all 0.2s ease;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
     cursor: pointer;
+    transition: all 0.2s ease;
     border-left: 4px solid #228be6;
-    position: relative;
 }
 
-.poi-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+.poi-list-item:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transform: translateX(4px);
 }
 
-.poi-card-header {
+.poi-list-item-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
-.poi-card-icon {
-    font-size: 32px;
+.poi-list-item-icon {
+    font-size: 20px;
 }
 
-.poi-card-priority {
-    font-size: 12px;
-    padding: 4px 10px;
-    border-radius: 12px;
+.poi-list-item-priority {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 10px;
     font-weight: 600;
 }
 
-.poi-card-priority.incontournable {
+.poi-list-item-priority.incontournable {
     background: #fff5f5;
     color: #fa5252;
 }
 
-.poi-card-priority.important {
+.poi-list-item-priority.important {
     background: #fff4e6;
     color: #fd7e14;
 }
 
-.poi-card-priority.normale {
+.poi-list-item-priority.normale {
     background: #e7f5ff;
     color: #228be6;
 }
 
-.poi-card-priority.si_possible {
+.poi-list-item-priority.si_possible {
     background: #f8f9fa;
     color: #868e96;
 }
 
-.poi-card-name {
-    font-size: 18px;
-    font-weight: 700;
-    color: #212529;
-    margin-bottom: 8px;
-}
-
-.poi-card-address {
-    font-size: 14px;
-    color: #868e96;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: flex-start;
-    gap: 6px;
-}
-
-.poi-card-notes {
-    font-size: 13px;
-    color: #495057;
-    line-height: 1.6;
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid #e9ecef;
-    max-height: 60px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.poi-card-footer {
-    margin-top: 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.poi-card-status {
-    font-size: 12px;
-    padding: 4px 10px;
-    border-radius: 12px;
-    background: #e7f5ff;
-    color: #228be6;
+.poi-list-item-name {
+    font-size: 15px;
     font-weight: 600;
+    color: #212529;
+    margin-bottom: 6px;
 }
 
-.poi-card-status.assigned {
-    background: #d3f9d8;
-    color: #2b8a3e;
+.poi-list-item-address {
+    font-size: 12px;
+    color: #868e96;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
-.poi-card-actions {
+.poi-list-item-actions {
+    margin-top: 12px;
     display: flex;
     gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid #f1f3f5;
 }
 
-.poi-card-actions button {
-    background: transparent;
-    border: none;
-    padding: 6px 12px;
+.poi-list-item-actions button {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid #dee2e6;
+    background: white;
     border-radius: 6px;
+    font-size: 11px;
     cursor: pointer;
-    font-size: 12px;
     transition: all 0.2s;
 }
 
-.poi-card-actions button:hover {
+.poi-list-item-actions button:hover {
     background: #f8f9fa;
+    border-color: #228be6;
 }
 
 .poi-empty-state {
     text-align: center;
-    padding: 80px 24px;
+    padding: 60px 20px;
     color: #868e96;
 }
 
 .poi-empty-state-icon {
-    font-size: 64px;
-    margin-bottom: 16px;
+    font-size: 48px;
+    margin-bottom: 12px;
 }
 
 .poi-empty-state-title {
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 600;
     color: #495057;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .poi-empty-state-text {
-    font-size: 14px;
-    margin-bottom: 24px;
+    font-size: 13px;
+    margin-bottom: 20px;
+}
+
+/* Map Container (Right) */
+.poi-map-container {
+    flex: 1;
+    position: relative;
+    background: #e9ecef;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .poi-view {
+        flex-direction: column;
+    }
+
+    .poi-sidebar {
+        width: 100%;
+        height: 50%;
+    }
+
+    .poi-map-container {
+        height: 50%;
+    }
 }
 
 /* ============================
@@ -2388,39 +2422,61 @@
 
         <!-- POI View -->
         <div class="poi-view" id="poiView" style="display: none;">
-            <div class="poi-header">
-                <div class="poi-header-top">
-                    <div class="view-tabs">
-                        <button class="view-tab" onclick="switchMainView('calendar')">
-                            📊 Planning Hebdomadaire
+            <!-- POI Sidebar (Left) -->
+            <div class="poi-sidebar">
+                <div class="poi-sidebar-header">
+                    <div class="view-tabs-vertical">
+                        <button class="view-tab" onclick="switchMainView('planning')">
+                            📊 Planning
                         </button>
                         <button class="view-tab active" onclick="switchMainView('poi')">
-                            📍 Points d'intérêt
+                            📍 POI
                         </button>
                         <button class="view-tab" onclick="switchMainView('map')">
                             🗺️ Carte
                         </button>
                     </div>
-                    <div class="project-selector-planning">
-                        <button class="project-btn" onclick="toggleProjectDropdownPOI()">
-                            <span id="currentProjectNamePOI">Mes Projets</span>
-                            <span style="margin-left: auto;">▼</span>
-                        </button>
-                        <div class="project-dropdown" id="projectDropdownPOI"></div>
+                    <h3 class="poi-sidebar-title">Points d'intérêt</h3>
+                    <button class="btn-primary" onclick="openPOIModal()" style="width: 100%; margin-bottom: 16px;">
+                        ➕ Nouveau POI
+                    </button>
+
+                    <!-- Filters -->
+                    <div class="poi-filters">
+                        <input type="text" class="poi-filter-input" id="poiFilterSearch" placeholder="🔍 Rechercher..." oninput="filterPOIs()">
+
+                        <select class="poi-filter-select" id="poiFilterPriority" onchange="filterPOIs()">
+                            <option value="">Toutes priorités</option>
+                            <option value="incontournable">⭐⭐⭐ Incontournable</option>
+                            <option value="important">⭐⭐ Important</option>
+                            <option value="normale">⭐ Normale</option>
+                            <option value="si_possible">Si possible</option>
+                        </select>
+
+                        <select class="poi-filter-select" id="poiFilterCategory" onchange="filterPOIs()">
+                            <option value="">Toutes catégories</option>
+                            <option value="activite">🎯 Activité</option>
+                            <option value="restaurant">🍽️ Restaurant</option>
+                            <option value="visite">🏛️ Visite</option>
+                            <option value="hotel">🏨 Hébergement</option>
+                        </select>
+
+                        <select class="poi-filter-select" id="poiFilterStatus" onchange="filterPOIs()">
+                            <option value="">Tous statuts</option>
+                            <option value="unassigned">📋 Non planifiés</option>
+                            <option value="assigned">✅ Planifiés</option>
+                        </select>
                     </div>
                 </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
-                    <div>
-                        <h2 class="planning-main-title">Points d'intérêt</h2>
-                        <p class="planning-subtitle">Préparez votre voyage en ajoutant les lieux à visiter</p>
-                    </div>
-                    <button class="btn-primary" onclick="openPOIModal()" style="flex-shrink: 0;">
-                        ➕ Nouveau point d'intérêt
-                    </button>
+
+                <div class="poi-sidebar-content" id="poiSidebarList">
+                    <!-- POI list will be generated here -->
                 </div>
             </div>
-            <div class="poi-content" id="poiContent">
-                <!-- POI cards will be generated here -->
+
+            <!-- POI Map (Right) -->
+            <div class="poi-map-container">
+                <div id="poiMap" style="width: 100%; height: 100%;"></div>
             </div>
         </div>
 
