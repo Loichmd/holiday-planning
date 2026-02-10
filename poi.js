@@ -7,6 +7,11 @@ let editingPOI = null;
 let poiMap = null;
 let poiMarkers = [];
 
+function formatPOIDate(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
 // ============================================
 // POI VIEW RENDERING
 // ============================================
@@ -44,8 +49,20 @@ function renderPOISidebar() {
         return;
     }
 
+    // Trier : planifiés par date/heure croissante, puis non planifiés
+    const sorted = [...currentPOIs].sort((a, b) => {
+        if (a.assigned_date && !b.assigned_date) return -1;
+        if (!a.assigned_date && b.assigned_date) return 1;
+        if (a.assigned_date && b.assigned_date) {
+            const cmp = a.assigned_date.localeCompare(b.assigned_date);
+            if (cmp !== 0) return cmp;
+            return (a.assigned_time || '00:00').localeCompare(b.assigned_time || '00:00');
+        }
+        return 0;
+    });
+
     let html = '';
-    currentPOIs.forEach(poi => {
+    sorted.forEach(poi => {
         html += renderPOIListItem(poi);
     });
 
@@ -83,7 +100,10 @@ function renderPOIListItem(poi) {
             </div>
             <div class="poi-list-item-actions" onclick="event.stopPropagation()">
                 <button onclick="editPOI('${poi.id}')" title="Modifier">✏️ Éditer</button>
-                <button onclick="openPlanifierModal('${poi.id}')" title="Planifier à un jour">📅 Planifier</button>
+                ${poi.assigned_date
+                    ? `<button onclick="openPlanifierModal('${poi.id}')" title="Modifier la planification" style="color: #228be6;">📅 ${formatPOIDate(poi.assigned_date)}${poi.assigned_time ? ' à ' + poi.assigned_time : ''}</button>`
+                    : `<button onclick="openPlanifierModal('${poi.id}')" title="Planifier à un jour">📅 Planifier</button>`
+                }
                 <button onclick="confirmDeletePOI('${poi.id}')" title="Supprimer">🗑️</button>
             </div>
         </div>
@@ -178,7 +198,7 @@ function displayPOIMarkers() {
                     ${poi.notes ? `<p style="margin: 8px 0; font-size: 13px;">${poi.notes}</p>` : ''}
                     <div style="margin-top: 10px; display: flex; gap: 8px;">
                         <button onclick="editPOI('${poi.id}')" class="btn btn-secondary" style="flex: 1; padding: 6px 12px; font-size: 12px;">Éditer</button>
-                        <button onclick="openPlanifierModal('${poi.id}')" class="btn btn-primary" style="flex: 1; padding: 6px 12px; font-size: 12px;">Planifier</button>
+                        <button onclick="openPlanifierModal('${poi.id}')" class="btn btn-primary" style="flex: 1; padding: 6px 12px; font-size: 12px;">${poi.assigned_date ? formatPOIDate(poi.assigned_date) + (poi.assigned_time ? ' ' + poi.assigned_time : '') : 'Planifier'}</button>
                     </div>
                 </div>
             `);
@@ -382,11 +402,25 @@ function openPlanifierModal(poiId) {
     const hourSelect = document.getElementById('planifierHour');
     const minuteSelect = document.getElementById('planifierMinute');
 
-    // Set today as default
-    const today = new Date();
-    dateInput.value = today.toISOString().split('T')[0];
-    hourSelect.value = '09';
-    minuteSelect.value = '00';
+    // Pre-fill with existing values or default to today
+    const poi = currentPOIs.find(p => p.id === poiId);
+    if (poi && poi.assigned_date) {
+        dateInput.value = poi.assigned_date;
+        if (poi.assigned_time) {
+            const [h, m] = poi.assigned_time.split(':');
+            hourSelect.value = h;
+            // Snap to nearest 5 minutes
+            minuteSelect.value = String(Math.round(parseInt(m) / 5) * 5).padStart(2, '0');
+        } else {
+            hourSelect.value = '09';
+            minuteSelect.value = '00';
+        }
+    } else {
+        const today = new Date();
+        dateInput.value = today.toISOString().split('T')[0];
+        hourSelect.value = '09';
+        minuteSelect.value = '00';
+    }
 
     modal.dataset.poiId = poiId;
     modal.classList.add('show');
