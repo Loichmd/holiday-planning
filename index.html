@@ -532,6 +532,30 @@
             outline: none;
             background: #f8f9fa;
         }
+        .header-project-selector {
+            position: relative;
+        }
+        .header-project-arrow {
+            font-size: 14px;
+            color: #868e96;
+            margin-left: 4px;
+        }
+        .header-project-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            min-width: 280px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            z-index: 200;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .header-project-dropdown.show {
+            display: block;
+        }
         .header-share-link {
             font-size: 13px;
             color: #228be6;
@@ -1754,7 +1778,7 @@
 .poi-view {
     display: none;
     flex-direction: row;
-    height: 100vh;
+    flex: 1;
     overflow: hidden;
 }
 
@@ -1983,18 +2007,8 @@
     display: none;
     position: relative;
     width: 100%;
-}
-
-/* Mobile: Full height minus bottom nav */
-.map-view {
-    height: calc(100vh - 64px);
-}
-
-/* Desktop: Full height */
-@media (min-width: 768px) {
-    .map-view {
-        height: 100vh;
-    }
+    flex: 1;
+    overflow: hidden;
 }
 
 /* Map Header (Desktop only) */
@@ -2460,7 +2474,10 @@
             <div class="unified-header">
                 <div class="header-top">
                     <div class="header-left">
-                        <span class="header-project-name" id="headerProjectName" onclick="editProjectNameInline()">Mes Projets</span>
+                        <div class="header-project-selector">
+                            <span class="header-project-name" id="headerProjectName" onclick="toggleHeaderProjectDropdown()">Mes Projets <span class="header-project-arrow">▾</span></span>
+                            <div class="header-project-dropdown" id="headerProjectDropdown"></div>
+                        </div>
                         <button class="header-share-link" onclick="openShareModalForCurrentProject()">👥 Partager ce projet</button>
                     </div>
                     <div class="header-center">Planning Vacances</div>
@@ -2495,10 +2512,9 @@
                     <!-- Les colonnes jour seront générées ici -->
                 </div>
             </div>
-        </div>
 
-        <!-- Map View -->
-        <div class="map-view" id="mapView">
+            <!-- Map View -->
+            <div class="map-view" id="mapView">
             <div class="day-selector" id="daySelector">
                 <!-- Day chips will be generated here -->
             </div>
@@ -2565,6 +2581,8 @@
                 <div id="poiMap" style="width: 100%; height: 100%;"></div>
             </div>
         </div>
+
+        </div><!-- /main-content -->
 
         <!-- Bottom Navigation (Mobile only) -->
         <nav class="bottom-nav">
@@ -3414,7 +3432,7 @@
 
             document.getElementById('currentProjectName').textContent = currentProj ? currentProj.name : 'Mes Projets';
             const headerProjectName = document.getElementById('headerProjectName');
-            if (headerProjectName) headerProjectName.textContent = currentProj ? currentProj.name : 'Mes Projets';
+            if (headerProjectName) headerProjectName.innerHTML = (currentProj ? currentProj.name : 'Mes Projets') + ' <span class="header-project-arrow">▾</span>';
             if (document.getElementById('currentProjectNamePlanning')) {
                 document.getElementById('currentProjectNamePlanning').textContent = currentProj ? currentProj.name : 'Mes Projets';
             }
@@ -3471,6 +3489,10 @@
             if (dropdownUnified) {
                 dropdownUnified.innerHTML = dropdownHTML;
             }
+            const headerDropdown = document.getElementById('headerProjectDropdown');
+            if (headerDropdown) {
+                headerDropdown.innerHTML = dropdownHTML;
+            }
         }
 
         function toggleProjectDropdown() {
@@ -3487,6 +3509,22 @@
 
         function toggleProjectDropdownUnified() {
             document.getElementById('projectDropdownUnified').classList.toggle('show');
+        }
+
+        function toggleHeaderProjectDropdown(event) {
+            if (event) event.stopPropagation();
+            const dropdown = document.getElementById('headerProjectDropdown');
+            const isOpen = dropdown.classList.toggle('show');
+            if (isOpen) {
+                setTimeout(() => {
+                    document.addEventListener('click', function closeDropdown(e) {
+                        if (!dropdown.contains(e.target)) {
+                            dropdown.classList.remove('show');
+                            document.removeEventListener('click', closeDropdown);
+                        }
+                    });
+                }, 0);
+            }
         }
 
         function toggleUserMenu() {
@@ -3538,6 +3576,8 @@
             document.getElementById('projectDropdownCalendar').classList.remove('show');
             const mapDropdown = document.getElementById('projectDropdownMap');
             if (mapDropdown) mapDropdown.classList.remove('show');
+            const headerDropdown = document.getElementById('headerProjectDropdown');
+            if (headerDropdown) headerDropdown.classList.remove('show');
             renderProjects();
 
             // Charger les activités du projet sélectionné
