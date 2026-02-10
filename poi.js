@@ -83,7 +83,7 @@ function renderPOIListItem(poi) {
             </div>
             <div class="poi-list-item-actions" onclick="event.stopPropagation()">
                 <button onclick="editPOI('${poi.id}')" title="Modifier">✏️ Éditer</button>
-                <button onclick="assignPOIPrompt('${poi.id}')" title="Assigner à un jour">📅 Assigner</button>
+                <button onclick="openPlanifierModal('${poi.id}')" title="Planifier à un jour">📅 Planifier</button>
                 <button onclick="confirmDeletePOI('${poi.id}')" title="Supprimer">🗑️</button>
             </div>
         </div>
@@ -178,7 +178,7 @@ function displayPOIMarkers() {
                     ${poi.notes ? `<p style="margin: 8px 0; font-size: 13px;">${poi.notes}</p>` : ''}
                     <div style="margin-top: 10px; display: flex; gap: 8px;">
                         <button onclick="editPOI('${poi.id}')" class="btn btn-secondary" style="flex: 1; padding: 6px 12px; font-size: 12px;">Éditer</button>
-                        <button onclick="assignPOIPrompt('${poi.id}')" class="btn btn-primary" style="flex: 1; padding: 6px 12px; font-size: 12px;">Assigner</button>
+                        <button onclick="openPlanifierModal('${poi.id}')" class="btn btn-primary" style="flex: 1; padding: 6px 12px; font-size: 12px;">Planifier</button>
                     </div>
                 </div>
             `);
@@ -375,17 +375,44 @@ async function confirmDeletePOI(poiId) {
     }
 }
 
-// Assign POI to a day with prompt (temporary, will be replaced with drag&drop)
-async function assignPOIPrompt(poiId) {
-    const dateInput = prompt('Date d\'assignation (YYYY-MM-DD) :');
-    if (!dateInput) return;
+// Open the planifier modal for a POI
+function openPlanifierModal(poiId) {
+    const modal = document.getElementById('planifierModal');
+    const dateInput = document.getElementById('planifierDate');
+    const hourSelect = document.getElementById('planifierHour');
+    const minuteSelect = document.getElementById('planifierMinute');
 
-    const timeInput = prompt('Heure (HH:MM) [optionnel]:') || null;
+    // Set today as default
+    const today = new Date();
+    dateInput.value = today.toISOString().split('T')[0];
+    hourSelect.value = '09';
+    minuteSelect.value = '00';
 
-    const result = await assignPOIToDay(poiId, dateInput, timeInput);
+    modal.dataset.poiId = poiId;
+    modal.classList.add('show');
+}
+
+function closePlanifierModal() {
+    document.getElementById('planifierModal').classList.remove('show');
+}
+
+async function confirmPlanifier() {
+    const modal = document.getElementById('planifierModal');
+    const poiId = modal.dataset.poiId;
+    const dateValue = document.getElementById('planifierDate').value;
+    const hour = document.getElementById('planifierHour').value;
+    const minute = document.getElementById('planifierMinute').value;
+
+    if (!dateValue) {
+        alert('Veuillez sélectionner une date.');
+        return;
+    }
+
+    const timeValue = `${hour}:${minute}`;
+    const result = await assignPOIToDay(poiId, dateValue, timeValue);
     if (result.success) {
+        closePlanifierModal();
         renderPOIView();
-        alert('✅ POI assigné avec succès !');
     } else {
         alert('Erreur: ' + result.error);
     }
