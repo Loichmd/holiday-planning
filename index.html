@@ -489,65 +489,171 @@
         
         /* Unified Header - Persistent across all views */
         .unified-header {
-            padding: 16px 24px;
             background: white;
-            border-bottom: 1px solid #e9ecef;
             flex-shrink: 0;
             position: sticky;
             top: 0;
             z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 24px;
+        }
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .header-project-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #212529;
+            cursor: pointer;
+            border: none;
+            background: none;
+            padding: 0;
+            font-family: inherit;
+            outline: none;
+        }
+        .header-project-name:hover {
+            color: #228be6;
+        }
+        .header-project-name-input {
+            font-size: 18px;
+            font-weight: 700;
+            color: #212529;
+            border: 1px solid #228be6;
+            border-radius: 6px;
+            padding: 2px 8px;
+            font-family: inherit;
+            outline: none;
+            background: #f8f9fa;
+        }
+        .header-share-link {
+            font-size: 13px;
+            color: #228be6;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            font-family: inherit;
+            text-align: left;
+        }
+        .header-share-link:hover {
+            text-decoration: underline;
+        }
+        .header-center {
+            font-size: 16px;
+            font-weight: 600;
+            color: #868e96;
+            letter-spacing: 0.5px;
+        }
+        .header-right {
+            position: relative;
+        }
+        .header-user-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+        }
+        .user-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            min-width: 200px;
+            z-index: 200;
+            overflow: hidden;
+        }
+        .header-right:hover .user-dropdown {
+            display: block;
+        }
+        .user-dropdown-info {
+            padding: 16px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .user-dropdown-email {
+            font-size: 14px;
+            color: #495057;
+            font-weight: 500;
+        }
+        .user-dropdown-action {
+            padding: 12px 16px;
+            font-size: 14px;
+            color: #fa5252;
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+            font-weight: 500;
+        }
+        .user-dropdown-action:hover {
+            background: #fff5f5;
+        }
+        .header-tabs {
+            display: flex;
+            gap: 0;
+            padding: 0 24px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .header-tab {
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #868e96;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .header-tab:hover {
+            color: #495057;
+        }
+        .header-tab.active {
+            color: #228be6;
+            border-bottom-color: #228be6;
+            font-weight: 600;
         }
 
-        /* Responsive: Unified Header pour mobile */
         @media (max-width: 768px) {
-            .unified-header {
+            .header-top {
                 padding: 12px 16px;
-                display: block;
             }
-
-            .unified-header > div {
-                flex-direction: column;
-                gap: 12px;
-            }
-
-            .view-tabs {
-                width: 100%;
-                display: flex;
-                gap: 8px;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: none;
-            }
-
-            .view-tabs::-webkit-scrollbar {
+            .header-center {
                 display: none;
             }
-
-            .view-tab {
-                padding: 8px 16px;
-                font-size: 14px;
+            .header-tabs {
+                padding: 0 16px;
+                overflow-x: auto;
+                scrollbar-width: none;
+            }
+            .header-tabs::-webkit-scrollbar {
+                display: none;
+            }
+            .header-tab {
+                padding: 10px 16px;
                 white-space: nowrap;
                 flex-shrink: 0;
-            }
-
-            .project-selector-unified {
-                width: 100%;
-            }
-
-            .project-selector-unified .project-btn {
-                width: 100%;
-            }
-        }
-
-        /* Extra small devices */
-        @media (max-width: 375px) {
-            .unified-header {
-                padding: 10px 12px;
-            }
-
-            .view-tab {
-                padding: 6px 12px;
-                font-size: 13px;
             }
         }
         .content-header {
@@ -944,32 +1050,7 @@
         /* ============================
            WEEKLY PLANNING VIEW
            ============================ */
-        .view-tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-        .view-tab {
-            padding: 10px 20px;
-            border: none;
-            background: #f8f9fa;
-            color: #495057;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .view-tab:hover {
-            background: #e9ecef;
-        }
-        .view-tab.active {
-            background: #228be6;
-            color: white;
-        }
+        /* view-tabs: legacy, remplacé par header-tabs */
         
         /* ============================
            PLANNING VIEW - STYLE TRELLO
@@ -2377,28 +2458,26 @@
         <div class="main-content">
             <!-- Global Unified Header (persistent across all views) -->
             <div class="unified-header">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div class="view-tabs" id="unifiedViewTabs">
-                        <button class="view-tab active" onclick="switchMainView('planning')" data-view="planning">
-                            📊 Planning
-                        </button>
-                        <button class="view-tab" onclick="switchMainView('poi')" data-view="poi">
-                            📍 Points d'intérêt
-                        </button>
-                        <button class="view-tab" onclick="switchMainView('map')" data-view="map">
-                            🗺️ Carte
-                        </button>
+                <div class="header-top">
+                    <div class="header-left">
+                        <span class="header-project-name" id="headerProjectName" onclick="editProjectNameInline()">Mes Projets</span>
+                        <button class="header-share-link" onclick="openShareModalForCurrentProject()">👥 Partager ce projet</button>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div class="project-selector-unified">
-                            <button class="project-btn" onclick="toggleProjectDropdownUnified()">
-                                <span id="currentProjectNameUnified">Mes Projets</span>
-                                <span style="margin-left: auto;">▼</span>
-                            </button>
-                            <div class="project-dropdown" id="projectDropdownUnified"></div>
+                    <div class="header-center">Planning Vacances</div>
+                    <div class="header-right">
+                        <button class="header-user-avatar" id="headerUserAvatar">U</button>
+                        <div class="user-dropdown">
+                            <div class="user-dropdown-info">
+                                <div class="user-dropdown-email" id="headerUserEmail">utilisateur@email.com</div>
+                            </div>
+                            <button class="user-dropdown-action" onclick="handleLogout()">Déconnexion</button>
                         </div>
-                        <button class="btn-icon user-avatar" id="userAvatarUnified" onclick="toggleUserMenu()" title="Menu utilisateur">U</button>
                     </div>
+                </div>
+                <div class="header-tabs">
+                    <button class="header-tab active" onclick="switchMainView('planning')" data-view="planning">Planning</button>
+                    <button class="header-tab" onclick="switchMainView('poi')" data-view="poi">Points d'intérêt</button>
+                    <button class="header-tab" onclick="switchMainView('map')" data-view="map">Carte</button>
                 </div>
             </div>
 
@@ -2824,8 +2903,11 @@
             document.getElementById('userAvatar').textContent = initials;
             const userAvatarCalendar = document.getElementById('userAvatarCalendar');
             if (userAvatarCalendar) userAvatarCalendar.textContent = initials;
-            const userAvatarUnified = document.getElementById('userAvatarUnified');
-            if (userAvatarUnified) userAvatarUnified.textContent = initials;
+            // Nouveau header unifié
+            const headerAvatar = document.getElementById('headerUserAvatar');
+            if (headerAvatar) headerAvatar.textContent = initials;
+            const headerEmail = document.getElementById('headerUserEmail');
+            if (headerEmail) headerEmail.textContent = currentUser.email || '';
             document.getElementById('userName').textContent = currentUser.email || 'Utilisateur';
             document.getElementById('userEmail').textContent = currentUser.email || '';
 
@@ -3331,6 +3413,8 @@
             const currentProj = projects.find(p => p.id === currentProject);
 
             document.getElementById('currentProjectName').textContent = currentProj ? currentProj.name : 'Mes Projets';
+            const headerProjectName = document.getElementById('headerProjectName');
+            if (headerProjectName) headerProjectName.textContent = currentProj ? currentProj.name : 'Mes Projets';
             if (document.getElementById('currentProjectNamePlanning')) {
                 document.getElementById('currentProjectNamePlanning').textContent = currentProj ? currentProj.name : 'Mes Projets';
             }
@@ -3406,10 +3490,44 @@
         }
 
         function toggleUserMenu() {
-            // Simple logout action for now
-            if (confirm('Se déconnecter ?')) {
-                handleLogout();
+            // Géré par le dropdown hover dans le nouveau header
+            handleLogout();
+        }
+
+        function editProjectNameInline() {
+            if (!currentProject) return;
+            const span = document.getElementById('headerProjectName');
+            const currentName = span.textContent;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentName;
+            input.className = 'header-project-name-input';
+            span.replaceWith(input);
+            input.focus();
+            input.select();
+
+            async function save() {
+                const newName = input.value.trim();
+                if (newName && newName !== currentName) {
+                    await updateProject(currentProject, { name: newName });
+                    await renderProjects();
+                }
+                const newSpan = document.createElement('span');
+                newSpan.className = 'header-project-name';
+                newSpan.id = 'headerProjectName';
+                newSpan.onclick = editProjectNameInline;
+                newSpan.textContent = newName || currentName;
+                input.replaceWith(newSpan);
             }
+
+            input.addEventListener('blur', save);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') input.blur();
+                if (e.key === 'Escape') {
+                    input.value = currentName;
+                    input.blur();
+                }
+            });
         }
 
         async function selectProject(id) {
@@ -4543,7 +4661,7 @@
 
             try {
                 // Update unified header tabs active state
-                document.querySelectorAll('#unifiedViewTabs .view-tab').forEach(tab => {
+                document.querySelectorAll('.header-tabs .header-tab').forEach(tab => {
                     tab.classList.remove('active');
                     if (tab.dataset.view === viewName) {
                         tab.classList.add('active');
