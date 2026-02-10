@@ -3244,21 +3244,27 @@
         // Events rendering
         function renderEvents() {
             const timeline = document.getElementById('eventsTimeline');
-            const todayActivities = activities.filter(a => 
-                a.projectId === currentProject && 
+            const todayActivities = activities.filter(a =>
+                a.projectId === currentProject &&
                 isSameDay(a.date, selectedDate)
             );
-            
-            // Update header
+
+            // Update header (elements may not exist in current layout)
             const today = new Date();
             const isToday = selectedDate.toDateString() === today.toDateString();
-            document.getElementById('contentTitle').textContent = 
-                isToday ? 'Aujourd\'hui' : selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+            const contentTitle = document.getElementById('contentTitle');
+            if (contentTitle) {
+                contentTitle.textContent = isToday ? 'Aujourd\'hui' : selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+            }
+
+            const contentSubtitle = document.getElementById('contentSubtitle');
+            if (contentSubtitle) {
+                contentSubtitle.textContent = todayActivities.length === 0 ? 'Aucune activité prévue' :
+                    `${todayActivities.length} activité${todayActivities.length > 1 ? 's' : ''}`;
+            }
             
-            document.getElementById('contentSubtitle').textContent = 
-                todayActivities.length === 0 ? 'Aucune activité prévue' : 
-                `${todayActivities.length} activité${todayActivities.length > 1 ? 's' : ''}`;
-            
+            if (!timeline) return;
+
             if (todayActivities.length === 0) {
                 timeline.innerHTML = `
                     <div class="empty-state">
