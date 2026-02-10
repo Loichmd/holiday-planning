@@ -2401,71 +2401,18 @@
 
     <!-- App Container -->
     <div class="app-container" id="appContainer">
-        <!-- Sidebar (Calendar) -->
-        <div class="sidebar">
-            <div class="header">
-                <div class="header-top">
-                    <div class="user-profile">
-                        <div class="user-avatar" id="userAvatar">JD</div>
-                        <div class="user-info">
-                            <div class="user-name" id="userName">John Doe</div>
-                            <div class="user-email" id="userEmail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="2842474046684d50494558444d064b4745">[email&#160;protected]</a></div>
-                        </div>
-                    </div>
-                    <button class="logout-btn" onclick="handleLogout()">Déconnexion</button>
-                </div>
-                
-                <div class="project-selector">
-                    <button class="project-btn" onclick="toggleProjectDropdown()">
-                        <span id="currentProjectName">Mes Projets</span>
-                        <span style="margin-left: auto;">▼</span>
-                    </button>
-                    <div class="project-dropdown" id="projectDropdown"></div>
-                </div>
-
-                <!-- Bouton de partage visible -->
-                <div id="shareButtonContainer" style="padding: 12px 20px; display: none;">
-                    <button class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="openShareModalForCurrentProject()">
-                        <span>👥</span>
-                        <span>Partager ce projet</span>
-                    </button>
-                </div>
-
-                <!-- Liste des collaborateurs -->
-                <div id="collaboratorsSection" style="padding: 0 20px 12px 20px; display: none;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <h4 style="font-size: 12px; font-weight: 600; color: #868e96; text-transform: uppercase; margin: 0;">Collaborateurs</h4>
-                        <button onclick="openShareModalForCurrentProject()" style="background: none; border: none; color: #339af0; font-size: 11px; cursor: pointer; padding: 4px 8px; font-weight: 600;">Voir tout</button>
-                    </div>
-                    <div id="collaboratorsMiniList"></div>
-                </div>
-            </div>
-            
-            <div class="sidebar-content">
-                <div class="date-display">
-                    <div class="date-info">
-                        <div class="current-date" id="currentDay">15</div>
-                        <div class="current-month" id="currentMonth">DÉC 2025</div>
-                    </div>
-                    <div class="nav-btns">
-                        <button class="nav-btn" onclick="previousMonth()">‹</button>
-                        <button class="nav-btn" onclick="nextMonth()">›</button>
-                    </div>
-                </div>
-                
-                <div class="mini-calendar">
-                    <div class="calendar-weekdays">
-                        <div class="calendar-weekday">L</div>
-                        <div class="calendar-weekday">M</div>
-                        <div class="calendar-weekday">M</div>
-                        <div class="calendar-weekday">J</div>
-                        <div class="calendar-weekday">V</div>
-                        <div class="calendar-weekday">S</div>
-                        <div class="calendar-weekday">D</div>
-                    </div>
-                    <div class="calendar-days" id="calendarDays"></div>
-                </div>
-            </div>
+        <!-- Hidden elements referenced by JS -->
+        <div style="display:none;">
+            <span id="userAvatar"></span>
+            <span id="userName"></span>
+            <span id="userEmail"></span>
+            <span id="currentProjectName"></span>
+            <div id="projectDropdown"></div>
+            <div id="shareButtonContainer"></div>
+            <div id="collaboratorsSection"><div id="collaboratorsMiniList"></div></div>
+            <div id="currentDay"></div>
+            <div id="currentMonth"></div>
+            <div id="calendarDays"></div>
         </div>
         
         <!-- Main Content (Events) -->
